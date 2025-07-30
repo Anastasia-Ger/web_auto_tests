@@ -1,0 +1,251 @@
+### Get auth token for admin
+POST http://localhost:4111/api/v1/auth/login
+Content-Type: Application/json
+
+{
+ "username":"Max2025",
+ "password":"weoWEr234$lk"
+}
+
+//Create 2 users and their accounts to check deposit and transfer
+### Create user 1
+POST http://localhost:4111/api/v1/admin/users
+Content-Type: Application/json
+Authorization: Basic YWRtaW46YWRtaW4=
+
+{
+  "username": "Max2025",
+  "password": "weoWEr234$lk",
+  "role": "USER"
+}
+
+### Create an account for user 1 (Max2025)
+POST http://localhost:4111/api/v1/accounts
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+### Create user 2
+POST http://localhost:4111/api/v1/admin/users
+Content-Type: Application/json
+Authorization: Basic YWRtaW46YWRtaW4=
+
+{
+  "username": "Nik2025",
+  "password": "owerAS234$lk",
+  "role": "USER"
+}
+
+### Create an account for user 2 (Nik2025)
+POST http://localhost:4111/api/v1/accounts
+Content-Type: Application/json
+Authorization: Basic TmlrMjAyNTpvd2VyQVMyMzQkbGs=
+
+// Deposit - positive tests:
+### User 1 can deposit money to his own account
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+  "id": 2,
+  "balance": 100
+}
+
+### User can deposit money with minimun amount
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+  "id": 2,
+  "balance": 0.01
+}
+
+### User can deposit money with maximum allowed amount
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+  "id": 2,
+  "balance": 1000000
+}
+
+// Deposit - negative tests:
+
+### User can not deposit money with negative amount
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+  "id": 2,
+  "balance": -100
+}
+
+### User can not deposit money with zero amount
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+  "id": 2,
+  "balance": 0
+}
+
+### User can not deposit money with String as amount
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+  "id": 2,
+  "balance": hundred
+}
+
+### User can not deposit money to non-existent account
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+  "id": 5,
+  "balance": 100
+}
+
+### It is impossible to duplicate deposit
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+  "id": 2,
+  "balance": 100
+}
+
+
+### the same deposite twice
+POST http://localhost:4111/api/v1/accounts/deposit
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+  "id": 2,
+  "balance": 100
+}
+//Result: Duplicated deposit IS possible
+
+### Check user's 1 transactions
+GET http://localhost:4111/api/v1/accounts/2/transactions
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+// Transfer - positive tests:
+### User 1 can transfer money to users' 2 account
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+  "senderAccountId": 2,
+  "receiverAccountId": 3,
+  "amount": 50
+}
+
+### Check that transfer is successful (user 2)
+GET http://localhost:4111/api/v1/accounts/3/transactions
+Content-Type: Application/json
+Authorization: Basic TmlrMjAyNTpvd2VyQVMyMzQkbGs=
+
+// Transfer - negative tests:
+
+### User can not transfer money to the same own account
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+  "senderAccountId": 2,
+  "receiverAccountId": 2,
+  "amount": 50
+}
+
+### Check result of the transfer to his own account
+GET http://localhost:4111/api/v1/accounts/2/transactions
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+// Result: It is possible to transfer money from/to the same account
+
+### User can not transfer more than available balance
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+  "senderAccountId": 2,
+  "receiverAccountId": 3,
+  "amount": 5000000
+}
+
+### User can not transfer with negative amount
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+  "senderAccountId": 2,
+  "receiverAccountId": 3,
+  "amount": -50
+}
+
+### User can not transfer with zero amount
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+  "senderAccountId": 2,
+  "receiverAccountId": 3,
+  "amount": 0
+}
+
+### User can not transfer with invalid amount format
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+  "senderAccountId": 2,
+  "receiverAccountId": 3,
+  "amount": hundred
+}
+
+### User can not transfer to non-existent recipient account
+POST http://localhost:4111/api/v1/accounts/transfer
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+  "senderAccountId": 2,
+  "receiverAccountId": 18,
+  "amount": 50
+}
+
+// Update customer username - positive tests:
+
+### User can update his user name
+PUT http://localhost:4111/api/v1/customer/profile
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+ "username":"Max1995"
+}
+
+### Check that username was updated successfully
+GET http://localhost:4111/api/v1/customer/profile
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+// Result: it is impossible to update username
