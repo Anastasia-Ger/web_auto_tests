@@ -249,3 +249,12 @@ Content-Type: Application/json
 Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
 
 // Result: it is impossible to update username
+// Update customer username - negative test:
+### User can not update username with blank value
+PUT http://localhost:4111/api/v1/customer/profile
+Content-Type: Application/json
+Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
+
+{
+ "username":" "
+}
