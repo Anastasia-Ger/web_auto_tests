@@ -23,6 +23,7 @@ public class TransferToAnotherUserAccount {
     }
     @Test
     public void userCanTransferMoneyToAnotherUserAccountTest() {
+
         // Admin login
         given()
                 .contentType(ContentType.JSON)
@@ -46,7 +47,7 @@ public class TransferToAnotherUserAccount {
                 .header("Authorization", "Basic YWRtaW46YWRtaW4=")
                 .body("""
                          {
-                           "username":"Tom4444",
+                           "username":"Ann99",
                            "password":"Max989898$",
                            "role":"USER"
                          }
@@ -55,7 +56,7 @@ public class TransferToAnotherUserAccount {
                 .then()
                 .assertThat()
                 .statusCode(HttpStatus.SC_CREATED)
-                .body("username", Matchers.equalTo("Tom4444"))
+                .body("username", Matchers.equalTo("Ann99"))
                 .body("password", Matchers.notNullValue());
 
         // User gets Auth token
@@ -64,7 +65,7 @@ public class TransferToAnotherUserAccount {
                 .accept(ContentType.JSON)
                 .body("""
                          {
-                           "username":"Tom4444",
+                           "username":"Ann99",
                            "password":"Max989898$"
                          }
                         """)
@@ -85,15 +86,90 @@ public class TransferToAnotherUserAccount {
                 .assertThat()
                 .statusCode(HttpStatus.SC_CREATED);
 
-        // User deposits money
+        //User performs 6 deposit transactions to accumulate enough balance for transfer limit check (10000)
         given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .header("Authorization", userAuthToken)
                 .body("""
                         {
-                         "id":12,
-                         "balance":500
+                         "id":22,
+                         "balance":5000
+                        }
+                        """)
+                .post("http://localhost:4111/api/v1/accounts/deposit")
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK);
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .body("""
+                        {
+                         "id":22,
+                         "balance":5000
+                        }
+                        """)
+                .post("http://localhost:4111/api/v1/accounts/deposit")
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK);
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .body("""
+                        {
+                         "id":22,
+                         "balance":5000
+                        }
+                        """)
+                .post("http://localhost:4111/api/v1/accounts/deposit")
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK);
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .body("""
+                        {
+                         "id":22,
+                         "balance":5000
+                        }
+                        """)
+                .post("http://localhost:4111/api/v1/accounts/deposit")
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK);
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .body("""
+                        {
+                         "id":22,
+                         "balance":5000
+                        }
+                        """)
+                .post("http://localhost:4111/api/v1/accounts/deposit")
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK);
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .body("""
+                        {
+                         "id":22,
+                         "balance":5000
                         }
                         """)
                 .post("http://localhost:4111/api/v1/accounts/deposit")
@@ -108,7 +184,7 @@ public class TransferToAnotherUserAccount {
                 .header("Authorization", "Basic YWRtaW46YWRtaW4=")
                 .body("""
                          {
-                           "username":"Ben2",
+                           "username":"Brad111",
                            "password":"Max989898$",
                            "role":"USER"
                          }
@@ -117,7 +193,7 @@ public class TransferToAnotherUserAccount {
                 .then()
                 .assertThat()
                 .statusCode(HttpStatus.SC_CREATED)
-                .body("username", Matchers.equalTo("Ben2"))
+                .body("username", Matchers.equalTo("Brad111"))
                 .body("password", Matchers.notNullValue());
 
         // User2 gets Auth token
@@ -126,7 +202,7 @@ public class TransferToAnotherUserAccount {
                 .accept(ContentType.JSON)
                 .body("""
                          {
-                           "username":"Ben2",
+                           "username":"Brad111",
                            "password":"Max989898$"
                          }
                         """)
@@ -147,16 +223,16 @@ public class TransferToAnotherUserAccount {
                 .assertThat()
                 .statusCode(HttpStatus.SC_CREATED);
 
-        // User1 transfers money to user2 account
+        // User1 transfers money to user2 account: lower boarder value - 9999
         given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .header("Authorization", userAuthToken)
                 .body("""
                         {
-                         "senderAccountId":12,
-                         "receiverAccountId":13,
-                         "amount": 50
+                         "senderAccountId":22,
+                         "receiverAccountId":23,
+                         "amount": 9999
                         }
                         """)
                 .post("http://localhost:4111/api/v1/accounts/transfer")
@@ -164,7 +240,40 @@ public class TransferToAnotherUserAccount {
                 .assertThat()
                 .statusCode(HttpStatus.SC_OK);
 
+        // User1 transfers money to user2 account: valid amount 10000
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .body("""
+                        {
+                         "senderAccountId":22,
+                         "receiverAccountId":23,
+                         "amount": 10000
+                        }
+                        """)
+                .post("http://localhost:4111/api/v1/accounts/transfer")
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK);
 
+        // User1 transfers money to user2 account: invalid amount (upper boarder value - 10001)
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .body("""
+                        {
+                         "senderAccountId":22,
+                         "receiverAccountId":23,
+                         "amount": 10001
+                        }
+                        """)
+                .post("http://localhost:4111/api/v1/accounts/transfer")
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                .body(Matchers.equalTo("Transfer amount cannot exceed 10000"));
 
     }
 }

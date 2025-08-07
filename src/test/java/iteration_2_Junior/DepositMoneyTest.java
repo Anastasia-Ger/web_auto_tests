@@ -21,9 +21,10 @@ public class DepositMoneyTest {
                         new ResponseLoggingFilter()));
 
     }
-    //positive tests:
+
     @Test
-    public void userCanDepositMoneyWithValidAmountTest() {
+    public void userCanDepositMoneyTest() {
+
         // Admin login
         given()
                 .contentType(ContentType.JSON)
@@ -41,13 +42,13 @@ public class DepositMoneyTest {
                 .statusCode(HttpStatus.SC_OK);
 
         // Admin creates user
-        given()
+        int userId = given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .header("Authorization", "Basic YWRtaW46YWRtaW4=")
                 .body("""
                          {
-                           "username":"Jeff22",
+                           "username":"Tom66",
                            "password":"Max989898$",
                            "role":"USER"
                          }
@@ -56,8 +57,10 @@ public class DepositMoneyTest {
                 .then()
                 .assertThat()
                 .statusCode(HttpStatus.SC_CREATED)
-                .body("username", Matchers.equalTo("Jeff22"))
-                .body("password", Matchers.notNullValue());
+                .body("username", Matchers.equalTo("Tom66"))
+                .body("password", Matchers.notNullValue())
+                .extract()
+                .path("id");
 
         // User gets Auth token
         String userAuthToken = given()
@@ -65,7 +68,7 @@ public class DepositMoneyTest {
                 .accept(ContentType.JSON)
                 .body("""
                          {
-                           "username":"Jeff22",
+                           "username":"Tom66",
                            "password":"Max989898$"
                          }
                         """)
@@ -86,15 +89,34 @@ public class DepositMoneyTest {
                 .assertThat()
                 .statusCode(HttpStatus.SC_CREATED);
 
-        // User deposits money
+        // User deposits money with invalid amount (more than 5000 per transaction)
         given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .header("Authorization", userAuthToken)
                 .body("""
                         {
-                         "id":6,
-                         "balance":50
+                         "id":19,
+                         "balance":5001
+                        }
+                        """)
+                .post("http://localhost:4111/api/v1/accounts/deposit")
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_BAD_REQUEST)
+                        .body(Matchers.equalTo("Deposit amount exceeds the 5000 limit"));
+
+
+
+        // User deposits money with valid amount (5000 per transaction)
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .body("""
+                        {
+                         "id":19,
+                         "balance":5000
                         }
                         """)
                 .post("http://localhost:4111/api/v1/accounts/deposit")
@@ -102,6 +124,43 @@ public class DepositMoneyTest {
                 .assertThat()
                 .statusCode(HttpStatus.SC_OK);
 
+
+        // User deposits money with valid amount (lower border value 4999)
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .body("""
+                        {
+                         "id":19,
+                         "balance":4999
+                        }
+                        """)
+                .post("http://localhost:4111/api/v1/accounts/deposit")
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK);
+
+
+        // Get customer accounts
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .get("http://localhost:4111/api/v1/customer/accounts")
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK);
+
+        // Delete user
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", "Basic YWRtaW46YWRtaW4=")
+                .delete("http://localhost:4111/api/v1/admin/users/" + userId)
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK);
 
     }
 }
