@@ -30,9 +30,7 @@ public class RequestSpecs {
                 .build();
     }
     public static RequestSpecification authAsUser(String username, String password) {
-        String userAuthHeader = new LoginUserRequester(
-                RequestSpecs.unauthSpec(),
-                ResponseSpecs.requestReturnedOk())
+        String userAuthHeader = new LoginUserRequester(RequestSpecs.unauthSpec(), ResponseSpecs.requestReturnedOk())
                 .post(LoginUserRequest.builder().username(username).password(password).build())
                 .extract()
                 .header("Authorization");

@@ -29,15 +29,13 @@ public class LoginUserTest extends BaseTest {
                 .password(RandomData.getPassword())
                 .role(UserRole.USER.toString())
                 .build();
-        new AdminCreateUserRequester(
-                RequestSpecs.adminSpec(),
-                ResponseSpecs.entityWasCreated())
+        new AdminCreateUserRequester(RequestSpecs.adminSpec(), ResponseSpecs.entityWasCreated())
                 .post(createUserRequest);
 
 
-        new LoginUserRequester(RequestSpecs.unauthSpec(),
-                ResponseSpecs.requestReturnedOk())
-                .post(LoginUserRequest.builder().username(createUserRequest.getUsername())
+        new LoginUserRequester(RequestSpecs.unauthSpec(), ResponseSpecs.requestReturnedOk())
+                .post(LoginUserRequest.builder()
+                        .username(createUserRequest.getUsername())
                         .password(createUserRequest.getPassword())
                         .build())
                 .header("Authorization", Matchers.notNullValue());

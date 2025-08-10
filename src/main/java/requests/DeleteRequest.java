@@ -5,12 +5,13 @@ import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
 import models.BaseModel;
 
-public abstract class Request<T extends BaseModel> {
+public abstract class DeleteRequest extends BaseModel {
     protected RequestSpecification requestSpecification;
     protected ResponseSpecification responseSpecification;
-    public Request (RequestSpecification requestSpecification, ResponseSpecification responseSpecification) {
+
+    public DeleteRequest(RequestSpecification requestSpecification, ResponseSpecification responseSpecification) {
         this.requestSpecification = requestSpecification;
         this.responseSpecification = responseSpecification;
     }
-    public abstract ValidatableResponse post(T model);
+    public abstract ValidatableResponse delete(int userID);
 }
