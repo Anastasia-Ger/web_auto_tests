@@ -2,10 +2,7 @@ package iteration_2_middle;
 
 import generators.RandomData;
 import iteration_1.BaseTest;
-import models.CreateUserRequest;
-import models.DepositMoneyRequest;
-import models.TransferMoneyRequest;
-import models.UserRole;
+import models.*;
 import org.junit.jupiter.api.Test;
 import requests.*;
 import specs.RequestSpecs;
@@ -100,20 +97,28 @@ public class TransferToAnotherUserAccountTest extends BaseTest {
                 .amount(9999)
                 .build();
 
-        new TransferMoneyRequester(RequestSpecs.authAsUser(user1Request.getUsername(), user1Request.getPassword()),
+        TransferMoneyResponse transferResponse = new TransferMoneyRequester(RequestSpecs.authAsUser(user1Request.getUsername(), user1Request.getPassword()),
                 ResponseSpecs.requestReturnedOk())
-                .post(transferRequest);
+                .post(transferRequest)
+                .extract()
+                .as(TransferMoneyResponse.class);
+
+        softly.assertThat(transferRequest.getAmount()).isEqualTo(transferResponse.getAmount());
 
         // User 1 transfers money to user 2 account: valid amount 10000 (max allowed)
-        TransferMoneyRequest transferRequestMaxallowed = TransferMoneyRequest.builder()
+        TransferMoneyRequest transferRequestMaxAllowed = TransferMoneyRequest.builder()
                 .senderAccountId(senderAccountId)
                 .receiverAccountId(receiverAccountId)
                 .amount(10000)
                 .build();
 
-        new TransferMoneyRequester(RequestSpecs.authAsUser(user1Request.getUsername(), user1Request.getPassword()),
+        TransferMoneyResponse transferResponseMaxAllowed = new TransferMoneyRequester(RequestSpecs.authAsUser(user1Request.getUsername(), user1Request.getPassword()),
                 ResponseSpecs.requestReturnedOk())
-                .post(transferRequestMaxallowed);
+                .post(transferRequestMaxAllowed)
+                .extract()
+                .as(TransferMoneyResponse.class);
+
+        softly.assertThat(transferRequestMaxAllowed.getAmount()).isEqualTo(transferResponseMaxAllowed.getAmount());
 
         // User 1 transfers money to user 2 account: upper boundary value 10001
         // Negative test

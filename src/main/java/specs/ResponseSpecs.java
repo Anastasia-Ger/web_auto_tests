@@ -27,17 +27,18 @@ public class ResponseSpecs {
                 .expectBody(errorKey, Matchers.equalTo(errorValue))
                 .build();
     }
-    public static ResponseSpecification requestReturnsBadRequestDepositOverLimit() {
-        return defaultResponseBuilder()
-                .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
-                .expectBody(Matchers.equalTo("Deposit amount exceeds the 5000 limit"))
-                .build();
-    }
 
     public static ResponseSpecification requestReturnsBadRequestTransferOverLimit() {
         return defaultResponseBuilder()
                 .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
                 .expectBody(Matchers.equalTo("Transfer amount cannot exceed 10000"))
+                .build();
+    }
+
+    public static ResponseSpecification requestReturnsBadRequestInvalidAmount(String errorValue) {
+        return defaultResponseBuilder()
+                .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
+                .expectBody(Matchers.equalTo(errorValue))
                 .build();
     }
 }
