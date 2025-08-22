@@ -6,7 +6,6 @@ import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
 
 public class ResponseSpecs {
-    // здесь тоже приватный конструктор, чтобы никто не мог создать экземпляры класса
     private ResponseSpecs() {}
     private  static ResponseSpecBuilder defaultResponseBuilder() {
         return new ResponseSpecBuilder();

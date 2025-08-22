@@ -1,10 +1,17 @@
 package iteration_2_middle;
 
-import generators.RandomData;
+import io.restassured.response.ValidatableResponse;
 import iteration_1.BaseTest;
 import models.*;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import requests.*;
+import requests.skelethon.Endpoint;
+import requests.skelethon.requesters.CrudRequester;
+import requests.skelethon.requesters.ValidatedCrudRequester;
+import requests.steps.AdminSteps;
+import requests.steps.CreateUserSteps;
+import requests.steps.UserSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
@@ -12,126 +19,114 @@ public class TransferToAnotherUserAccountTest extends BaseTest {
     @Test
     public void userCanTransferToAnotherAccount() {
 
-        // Create user 1
-        CreateUserRequest user1Request = CreateUserRequest.builder()
-                .username(RandomData.getUsername())
-                .password(RandomData.getPassword())
-                .role(UserRole.USER.toString())
-                .build();
+        // Create a user 1 - sender
+        CreateUserSteps sender = CreateUserSteps.createUser();
+        CreateUserRequest createUserRequest1 = sender.getRequest();
+        int senderId = (int)sender.getUserId();
+
+        // Create sender's account
+        int senderAccountId = AdminSteps.createAccount(createUserRequest1).getId();
 
 
-        new AdminCreateUserRequester(
-                RequestSpecs.adminSpec(),
-                ResponseSpecs.entityWasCreated())
-                .post(user1Request);
-
-
-        // User 1 creates an account and gets account ID
-        int senderAccountId = new CreateAccountRequester(RequestSpecs.authAsUser(user1Request.getUsername(), user1Request.getPassword()),
-                ResponseSpecs.entityWasCreated())
-                .post(null)
-                .extract()
-                .path("id");
-
-
-        //User 1 performs 6 deposit transactions to accumulate enough balance for transfer limit check (10000)
-        DepositMoneyRequest depositRequest = DepositMoneyRequest.builder()
+        // Sender performs 6 deposit transactions to accumulate enough balance for transfer limit check (10000)
+        DepositRequest depositRequest = DepositRequest.builder()
                 .id(senderAccountId)
                 .balance(5000)
                 .build();
 
-        new DepositMoneyRequester(RequestSpecs.authAsUser(user1Request.getUsername(), user1Request.getPassword()),
-                ResponseSpecs.requestReturnedOk())
-                .post(depositRequest);
+        for(int i = 0; i <6; i++) {
+            new CrudRequester(RequestSpecs.authAsUser(createUserRequest1.getUsername(), createUserRequest1.getPassword()),
+                    Endpoint.DEPOSIT,
+                    ResponseSpecs.requestReturnedOk())
+                    .post(depositRequest);
+        }
 
-        new DepositMoneyRequester(RequestSpecs.authAsUser(user1Request.getUsername(), user1Request.getPassword()),
-                ResponseSpecs.requestReturnedOk())
-                .post(depositRequest);
-
-        new DepositMoneyRequester(RequestSpecs.authAsUser(user1Request.getUsername(), user1Request.getPassword()),
-                ResponseSpecs.requestReturnedOk())
-                .post(depositRequest);
-
-        new DepositMoneyRequester(RequestSpecs.authAsUser(user1Request.getUsername(), user1Request.getPassword()),
-                ResponseSpecs.requestReturnedOk())
-                .post(depositRequest);
-
-        new DepositMoneyRequester(RequestSpecs.authAsUser(user1Request.getUsername(), user1Request.getPassword()),
-                ResponseSpecs.requestReturnedOk())
-                .post(depositRequest);
-
-        new DepositMoneyRequester(RequestSpecs.authAsUser(user1Request.getUsername(), user1Request.getPassword()),
-                ResponseSpecs.requestReturnedOk())
-                .post(depositRequest);
-
-        // Удали проверку аккаунта и баланса потом
-        new GetAccountRequester(RequestSpecs.authAsUser(user1Request.getUsername(),
-                user1Request.getPassword()),
-                ResponseSpecs.requestReturnedOk())
-                .get(null);
-
-        // Create user 2
-        CreateUserRequest user2Request = CreateUserRequest.builder()
-                .username(RandomData.getUsername())
-                .password(RandomData.getPassword())
-                .role(UserRole.USER.toString())
-                .build();
+        // Check balance from account info after 6 deposits
+        double balanceAfterDeposit = UserSteps.getCustomerAccounts(createUserRequest1.getUsername(),
+                createUserRequest1.getPassword()).get(0).getBalance();
+        softly.assertThat(balanceAfterDeposit).isEqualTo(depositRequest.getBalance() * 6);
 
 
-        new AdminCreateUserRequester(
-                RequestSpecs.adminSpec(),
-                ResponseSpecs.entityWasCreated())
-                .post(user2Request);
+        // Create user 2 - receiver
+        CreateUserSteps receiver = CreateUserSteps.createUser();
+        CreateUserRequest createUserRequest2 = receiver.getRequest();
+        int receiverId = (int)receiver.getUserId();
 
-        // User 2 creates an account and gets account ID
-        int receiverAccountId = new CreateAccountRequester(RequestSpecs.authAsUser(user2Request.getUsername(), user2Request.getPassword()),
-                ResponseSpecs.entityWasCreated())
-                .post(null)
-                .extract()
-                .path("id");
+        // Create receiver's account
+        int receiverAccountId = AdminSteps.createAccount(createUserRequest2).getId();
 
-        // User 1 transfers money to user 2 account: lower boundary value - 9999
-        TransferMoneyRequest transferRequest = TransferMoneyRequest.builder()
+        // Get initial balance from  receiver's account info
+        double initialBalance = UserSteps.getCustomerAccounts(createUserRequest2.getUsername(),
+                createUserRequest2.getPassword()).get(0).getBalance();
+
+        // Sender transfers money to receiver's account: lower boundary value - 9999
+        TransferRequest transferRequest1 = TransferRequest.builder()
                 .senderAccountId(senderAccountId)
                 .receiverAccountId(receiverAccountId)
                 .amount(9999)
                 .build();
 
-        TransferMoneyResponse transferResponse = new TransferMoneyRequester(RequestSpecs.authAsUser(user1Request.getUsername(), user1Request.getPassword()),
+        new CrudRequester(RequestSpecs.authAsUser(createUserRequest1.getUsername(),
+                createUserRequest1.getPassword()),
+                Endpoint.TRANSFER,
                 ResponseSpecs.requestReturnedOk())
-                .post(transferRequest)
-                .extract()
-                .as(TransferMoneyResponse.class);
+                .post(transferRequest1);
 
-        softly.assertThat(transferRequest.getAmount()).isEqualTo(transferResponse.getAmount());
 
-        // User 1 transfers money to user 2 account: valid amount 10000 (max allowed)
-        TransferMoneyRequest transferRequestMaxAllowed = TransferMoneyRequest.builder()
+        // Get balance from  receiver's account info after transfer 1
+       double balanceAfterTransfer1 = UserSteps.getCustomerAccounts(createUserRequest2.getUsername(),
+                createUserRequest2.getPassword()).get(0).getBalance();
+
+       softly.assertThat(balanceAfterTransfer1).isEqualTo(initialBalance + transferRequest1.getAmount());
+
+       // Sender transfers money to receiver's account: valid amount 10000 (max allowed)
+        TransferRequest transferRequest2 = TransferRequest.builder()
                 .senderAccountId(senderAccountId)
                 .receiverAccountId(receiverAccountId)
                 .amount(10000)
                 .build();
 
-        TransferMoneyResponse transferResponseMaxAllowed = new TransferMoneyRequester(RequestSpecs.authAsUser(user1Request.getUsername(), user1Request.getPassword()),
+        new CrudRequester(RequestSpecs.authAsUser(createUserRequest1.getUsername(),
+                createUserRequest1.getPassword()),
+                Endpoint.TRANSFER,
                 ResponseSpecs.requestReturnedOk())
-                .post(transferRequestMaxAllowed)
-                .extract()
-                .as(TransferMoneyResponse.class);
+                .post(transferRequest2);
 
-        softly.assertThat(transferRequestMaxAllowed.getAmount()).isEqualTo(transferResponseMaxAllowed.getAmount());
+        // Get balance from  receiver's account info after transfer 2
+        double balanceAfterTransfer2 = UserSteps.getCustomerAccounts(createUserRequest2.getUsername(),
+                createUserRequest2.getPassword()).get(0).getBalance();
 
-        // User 1 transfers money to user 2 account: upper boundary value 10001
+        softly.assertThat(balanceAfterTransfer2).isEqualTo(balanceAfterTransfer1 + transferRequest2.getAmount());
+
+        // Sender transfers money to receiver's account: upper boundary value 10001
         // Negative test
-        TransferMoneyRequest transferRequestUpperBound = TransferMoneyRequest.builder()
+        TransferRequest transferRequest3 = TransferRequest.builder()
                 .senderAccountId(senderAccountId)
                 .receiverAccountId(receiverAccountId)
                 .amount(10001)
                 .build();
 
-        new TransferMoneyRequester(RequestSpecs.authAsUser(user1Request.getUsername(), user1Request.getPassword()),
+        new CrudRequester(RequestSpecs.authAsUser(createUserRequest1.getUsername(), createUserRequest1.getPassword()),
+                Endpoint.TRANSFER,
                 ResponseSpecs.requestReturnsBadRequestTransferOverLimit())
-                .post(transferRequestUpperBound);
+                .post(transferRequest3);
+
+        // Get balance from  receiver's account info after transfer 3
+        double balanceAfterTransfer3 = UserSteps.getCustomerAccounts(createUserRequest2.getUsername(),
+                createUserRequest2.getPassword()).get(0).getBalance();
+
+        softly.assertThat(balanceAfterTransfer3).isEqualTo(balanceAfterTransfer2);
+
+        // Delete users
+        ValidatableResponse responseSpecification1 = new CrudRequester(RequestSpecs.adminSpec(), Endpoint.DELETE, ResponseSpecs.requestReturnedOk())
+                .delete(senderId);
+        softly.assertThat(responseSpecification1.body(Matchers.equalTo("User with ID " + senderId + " deleted successfully.")));
 
 
+        ValidatableResponse responseSpecification2 = new CrudRequester(RequestSpecs.adminSpec(), Endpoint.DELETE, ResponseSpecs.requestReturnedOk())
+                .delete(receiverId);
+        softly.assertThat(responseSpecification2.body(Matchers.equalTo("User with ID " + receiverId + " deleted successfully.")));
+
+        softly.assertAll();
     }
 }
