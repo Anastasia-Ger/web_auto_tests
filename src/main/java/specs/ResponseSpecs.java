@@ -40,4 +40,11 @@ public class ResponseSpecs {
                 .expectBody(Matchers.equalTo(errorValue))
                 .build();
     }
+
+    public static ResponseSpecification deleteUserOk(int userId) {
+        return defaultResponseBuilder()
+                .expectStatusCode(HttpStatus.SC_OK)
+                .expectBody(Matchers.equalTo("User with ID " + userId + " deleted successfully."))
+                .build();
+    }
 }

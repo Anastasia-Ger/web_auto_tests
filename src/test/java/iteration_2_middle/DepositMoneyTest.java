@@ -1,8 +1,5 @@
 package iteration_2_middle;
 
-import generators.RandomData;
-import generators.RandomModelGenerator;
-import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.ValidatableResponse;
 import iteration_1.BaseTest;
 import models.*;
@@ -10,7 +7,6 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.*;
 import requests.skelethon.Endpoint;
 import requests.skelethon.requesters.CrudRequester;
 import requests.skelethon.requesters.ValidatedCrudRequester;
@@ -20,7 +16,6 @@ import requests.steps.UserSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
-import java.util.List;
 import java.util.stream.Stream;
 
 public class DepositMoneyTest extends BaseTest {
@@ -125,9 +120,11 @@ public void userCanDepositMoneyWithValidAmount(double balance) {
 
 
         // Delete user
-        ValidatableResponse responseSpecification = new CrudRequester(RequestSpecs.adminSpec(), Endpoint.DELETE, ResponseSpecs.requestReturnedOk())
+        new CrudRequester(RequestSpecs.adminSpec(),
+                Endpoint.DELETE, ResponseSpecs.deleteUserOk(userId))
                 .delete(userId);
-        softly.assertThat(responseSpecification.body(Matchers.equalTo("User with ID " + userId + " deleted successfully.")));
+
+
 
 
         softly.assertAll();

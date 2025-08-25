@@ -1,14 +1,12 @@
 package iteration_2_middle;
 
-import io.restassured.response.ValidatableResponse;
 import iteration_1.BaseTest;
-import models.*;
-import org.hamcrest.Matchers;
+import models.CreateUserRequest;
+import models.DepositRequest;
+import models.TransferRequest;
 import org.junit.jupiter.api.Test;
-import requests.*;
 import requests.skelethon.Endpoint;
 import requests.skelethon.requesters.CrudRequester;
-import requests.skelethon.requesters.ValidatedCrudRequester;
 import requests.steps.AdminSteps;
 import requests.steps.CreateUserSteps;
 import requests.steps.UserSteps;
@@ -28,7 +26,8 @@ public class TransferToAnotherUserAccountTest extends BaseTest {
         int senderAccountId = AdminSteps.createAccount(createUserRequest1).getId();
 
 
-        // Sender performs 6 deposit transactions to accumulate enough balance for transfer limit check (10000)
+        // Sender performs 6 deposit transactions to accumulate enough balance for transfer limit check:
+        // 10000 and boundary values - 9999, 10001
         DepositRequest depositRequest = DepositRequest.builder()
                 .id(senderAccountId)
                 .balance(5000)
@@ -118,14 +117,13 @@ public class TransferToAnotherUserAccountTest extends BaseTest {
         softly.assertThat(balanceAfterTransfer3).isEqualTo(balanceAfterTransfer2);
 
         // Delete users
-        ValidatableResponse responseSpecification1 = new CrudRequester(RequestSpecs.adminSpec(), Endpoint.DELETE, ResponseSpecs.requestReturnedOk())
+        new CrudRequester(RequestSpecs.adminSpec(),
+                Endpoint.DELETE, ResponseSpecs.deleteUserOk(senderId))
                 .delete(senderId);
-        softly.assertThat(responseSpecification1.body(Matchers.equalTo("User with ID " + senderId + " deleted successfully.")));
 
-
-        ValidatableResponse responseSpecification2 = new CrudRequester(RequestSpecs.adminSpec(), Endpoint.DELETE, ResponseSpecs.requestReturnedOk())
+        new CrudRequester(RequestSpecs.adminSpec(),
+                Endpoint.DELETE, ResponseSpecs.deleteUserOk(receiverId))
                 .delete(receiverId);
-        softly.assertThat(responseSpecification2.body(Matchers.equalTo("User with ID " + receiverId + " deleted successfully.")));
 
         softly.assertAll();
     }

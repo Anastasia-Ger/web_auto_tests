@@ -51,10 +51,9 @@ Actual   :"N2bCRFsrMT"
          */
 
         // Delete user
-        ValidatableResponse responseSpecification = new CrudRequester(RequestSpecs.adminSpec(), Endpoint.DELETE, ResponseSpecs.requestReturnedOk())
+        new CrudRequester(RequestSpecs.adminSpec(),
+                Endpoint.DELETE, ResponseSpecs.deleteUserOk(userId))
                 .delete(userId);
-        softly.assertThat(responseSpecification.body(Matchers.equalTo("User with ID " + userId + " deleted successfully.")));
-
 
         softly.assertAll();
 
