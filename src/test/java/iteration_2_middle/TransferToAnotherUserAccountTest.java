@@ -1,6 +1,7 @@
 package iteration_2_middle;
 
 import iteration_1.BaseTest;
+import models.BankingTestData;
 import models.CreateUserRequest;
 import models.DepositRequest;
 import models.TransferRequest;
@@ -30,7 +31,7 @@ public class TransferToAnotherUserAccountTest extends BaseTest {
         // 10000 and boundary values - 9999, 10001
         DepositRequest depositRequest = DepositRequest.builder()
                 .id(senderAccountId)
-                .balance(5000)
+                .balance(BankingTestData.MAX_DEPOSIT)
                 .build();
 
         for(int i = 0; i <6; i++) {
@@ -62,7 +63,7 @@ public class TransferToAnotherUserAccountTest extends BaseTest {
         TransferRequest transferRequest1 = TransferRequest.builder()
                 .senderAccountId(senderAccountId)
                 .receiverAccountId(receiverAccountId)
-                .amount(9999)
+                .amount(BankingTestData.TRANSFER_VALID_LOWER)
                 .build();
 
         new CrudRequester(RequestSpecs.authAsUser(createUserRequest1.getUsername(),
@@ -82,7 +83,7 @@ public class TransferToAnotherUserAccountTest extends BaseTest {
         TransferRequest transferRequest2 = TransferRequest.builder()
                 .senderAccountId(senderAccountId)
                 .receiverAccountId(receiverAccountId)
-                .amount(10000)
+                .amount(BankingTestData.TRANSFER_VALID_BOUNDARY)
                 .build();
 
         new CrudRequester(RequestSpecs.authAsUser(createUserRequest1.getUsername(),
@@ -102,7 +103,7 @@ public class TransferToAnotherUserAccountTest extends BaseTest {
         TransferRequest transferRequest3 = TransferRequest.builder()
                 .senderAccountId(senderAccountId)
                 .receiverAccountId(receiverAccountId)
-                .amount(10001)
+                .amount(BankingTestData.TRANSFER_INVALID_UPPER)
                 .build();
 
         new CrudRequester(RequestSpecs.authAsUser(createUserRequest1.getUsername(), createUserRequest1.getPassword()),

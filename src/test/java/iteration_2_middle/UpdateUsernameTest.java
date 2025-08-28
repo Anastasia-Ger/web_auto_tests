@@ -31,7 +31,7 @@ public class UpdateUsernameTest extends BaseTest {
 
         UpdateUsernameResponse response = new ValidatedCrudRequester<UpdateUsernameResponse>(RequestSpecs.authAsUser(userRequest.getUsername(),
                 userRequest.getPassword()),
-                Endpoint.CUSTOMER_PROFILE,
+                Endpoint.UPDATE_CUSTOMER,
                 ResponseSpecs.requestReturnedOk())
                 .update(updateRequest);
 

@@ -33,10 +33,13 @@ public class TransferTest extends BaseTest {
         // Accumulate balance for transfer check:
         DepositRequest depositRequest = DepositRequest.builder()
                 .id(senderAccountId)
-                .balance(BankingTestData.DEPOSIT_MAX)
+                .balance(BankingTestData.MAX_DEPOSIT)
                 .build();
 
-        for (int i = 0; i < BankingTestData.TRANSFER_TEST_AMOUNT / BankingTestData.DEPOSIT_MAX; i++) {
+        // 15000 needed for test, deposit 5000 → 3 times
+        int depositsNeeded = BankingTestData.TEST_FUNDS_REQUIRED / BankingTestData.MAX_DEPOSIT;
+
+        for (int depositNo = 0; depositNo < depositsNeeded; depositNo++) {
             new CrudRequester(RequestSpecs.authAsUser(createUserRequest1.getUsername(), createUserRequest1.getPassword()),
                     Endpoint.DEPOSIT,
                     ResponseSpecs.requestReturnedOk())

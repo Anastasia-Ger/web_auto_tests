@@ -5,6 +5,7 @@ import generators.RandomData;
 import generators.RandomModelGenerator;
 import models.CreateUserRequest;
 import models.CreateUserResponse;
+import models.CustomerProfileResponse;
 import models.UserRole;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,6 +22,8 @@ import java.util.stream.Stream;
 public class SeniorCreateUserTest extends BaseTest {
     @Test
     public void adminCanCreateUserWithCorrectData() {
+
+        // Create user
         CreateUserRequest createUserRequest = RandomModelGenerator.generate(CreateUserRequest.class);
 
         CreateUserResponse createUserResponse = new ValidatedCrudRequester<CreateUserResponse>
@@ -30,6 +33,16 @@ public class SeniorCreateUserTest extends BaseTest {
                 .post(createUserRequest);
 
         ModelAssertions.assertThatModels(createUserRequest, createUserResponse).match();
+
+        // Get user's profile
+        CustomerProfileResponse customerProfileResponse = new ValidatedCrudRequester<CustomerProfileResponse>
+                (RequestSpecs.authAsUser(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                        Endpoint.CUSTOMER_PROFILE,
+                        ResponseSpecs.requestReturnedOk())
+                .get();
+
+        ModelAssertions.assertThatModels(createUserResponse, customerProfileResponse).match();
+
     }
 
     public static Stream<Arguments> userInvalidData() {

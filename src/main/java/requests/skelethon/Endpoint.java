@@ -28,6 +28,12 @@ public enum Endpoint {
     ),
     CUSTOMER_PROFILE(
             "/customer/profile",
+            BaseModel.class,
+            CustomerProfileResponse.class,
+            null
+    ),
+    UPDATE_CUSTOMER(
+            "/customer/profile",
             UpdateUsernameRequest.class,
             UpdateUsernameResponse.class,
             null
