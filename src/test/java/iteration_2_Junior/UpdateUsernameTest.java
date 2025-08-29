@@ -51,7 +51,7 @@ public class UpdateUsernameTest {
                 .header("Authorization", "Basic YWRtaW46YWRtaW4=")
                 .body("""
                          {
-                           "username":"Jlo56",
+                           "username":"Max2222",
                            "password":"Max989898$",
                            "role":"USER"
                          }
@@ -60,7 +60,7 @@ public class UpdateUsernameTest {
                 .then()
                 .assertThat()
                 .statusCode(HttpStatus.SC_CREATED)
-                .body("username", Matchers.equalTo("Jlo56"))
+                .body("username", Matchers.equalTo("Max2222"))
                 .body("password", Matchers.notNullValue());
 
         // user gets Auth token
@@ -69,7 +69,7 @@ public class UpdateUsernameTest {
                 .accept(ContentType.JSON)
                 .body("""
                          {
-                           "username":"Jlo56",
+                           "username":"Max2222",
                            "password":"Max989898$"
                          }
                         """)
@@ -89,7 +89,7 @@ public class UpdateUsernameTest {
                 .header("Authorization", userAuthToken)
                 .body("""
                         {
-                         "username":"Afflec"
+                         "username":"Ben2222"
                         }
                         """
 
@@ -97,9 +97,27 @@ public class UpdateUsernameTest {
                 .put("http://localhost:4111/api/v1/customer/profile")
                 .then()
                 .assertThat()
-                .statusCode(HttpStatus.SC_OK);
-                // пока ввела для асерта неизмененное имя, т.к. программа видимо его не меняет (баг???)
-             //   .body("username", Matchers.equalTo("Daddy111"));
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", Matchers.equalTo("Ben2222"));
+
+        // get request to check that username changed
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken)
+                .get("http://localhost:4111/api/v1/customer/profile")
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", Matchers.equalTo("Ben2222"));
+
+        /*
+        Bug: update operation does not change username
+        java.lang.AssertionError: 1 expectation failed.
+JSON path username doesn't match.
+Expected: Ben2222
+  Actual: Max2222
+         */
 
     }
     public static Stream<Arguments> userInvalidData() {
@@ -131,7 +149,6 @@ public class UpdateUsernameTest {
                 .extract()
                 .header("Authorization");
 
-        System.out.println("Extracted Auth token 2 is: " + userAuthToken2);
 
         // create variable for username values in the body
         String requestBody = String.format(
@@ -151,8 +168,20 @@ public class UpdateUsernameTest {
                 .put("http://localhost:4111/api/v1/customer/profile")
                 .then()
                 .assertThat()
-                .statusCode(HttpStatus.SC_OK);
-             //   .header(errorKey, errorValue);
+                .statusCode(HttpStatus.SC_OK)
+                .header(errorKey, errorValue);
+
+        // get request to check that username changed
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .header("Authorization", userAuthToken2)
+                .get("http://localhost:4111/api/v1/customer/profile")
+                .then()
+                .assertThat()
+                .statusCode(HttpStatus.SC_OK)
+                .body("username", Matchers.not(username));
+
 
     }
 }
