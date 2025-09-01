@@ -2,6 +2,7 @@ package requests.steps;
 
 import io.restassured.common.mapper.TypeRef;
 import models.GetAccountResponse;
+import models.GetUsersResponse;
 import requests.skelethon.Endpoint;
 import requests.skelethon.requesters.ValidatedCrudRequester;
 import specs.RequestSpecs;
@@ -21,4 +22,5 @@ public class UserSteps {
 
         return accounts;
     }
+
 }

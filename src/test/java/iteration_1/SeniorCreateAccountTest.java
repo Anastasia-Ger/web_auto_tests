@@ -1,6 +1,7 @@
 package iteration_1;
 
 import io.restassured.common.mapper.TypeRef;
+import models.CreateAccountResponse;
 import models.CreateUserRequest;
 import models.GetAccountResponse;
 import org.junit.jupiter.api.Test;
@@ -12,14 +13,15 @@ import specs.ResponseSpecs;
 
 import java.util.List;
 
-public class SeniorCreateAccountTest {
+public class SeniorCreateAccountTest extends BaseTest {
     @Test
     public void userCanCreateAccountTest() {
         // Создание пользователя
         CreateUserRequest userRequest = AdminSteps.createUser();
 
         // Создание аккаунта пользователем
-        new ValidatedCrudRequester<>(RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
+        CreateAccountResponse response = new ValidatedCrudRequester<CreateAccountResponse>(
+                RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
                 Endpoint.ACCOUNTS,
                 ResponseSpecs.entityWasCreated())
                 .post(null);
@@ -31,8 +33,7 @@ public class SeniorCreateAccountTest {
                 ResponseSpecs.requestReturnedOk()
         ).get(new TypeRef<List<GetAccountResponse>>() {});
 
-        System.out.println("Current balance is: " + accounts.get(0).getBalance());
-
-
+        softly.assertThat(response.getAccountNumber()).isEqualTo(accounts.getFirst().getAccountNumber());
+        softly.assertAll();
     }
 }

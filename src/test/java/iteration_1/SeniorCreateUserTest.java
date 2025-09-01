@@ -3,10 +3,8 @@ package iteration_1;
 import comparison.ModelAssertions;
 import generators.RandomData;
 import generators.RandomModelGenerator;
-import models.CreateUserRequest;
-import models.CreateUserResponse;
-import models.CustomerProfileResponse;
-import models.UserRole;
+import io.restassured.common.mapper.TypeRef;
+import models.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -14,10 +12,15 @@ import org.junit.jupiter.params.provider.MethodSource;
 import requests.skelethon.Endpoint;
 import requests.skelethon.requesters.CrudRequester;
 import requests.skelethon.requesters.ValidatedCrudRequester;
+import requests.steps.AdminSteps;
+import requests.steps.UserSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
+import java.util.List;
 import java.util.stream.Stream;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class SeniorCreateUserTest extends BaseTest {
     @Test
@@ -43,6 +46,14 @@ public class SeniorCreateUserTest extends BaseTest {
 
         ModelAssertions.assertThatModels(createUserResponse, customerProfileResponse).match();
 
+        // Get users' profiles by admin and check that user created
+        List<GetUsersResponse> users = AdminSteps.adminGetUsers();
+        String expectedUsername = createUserRequest.getUsername();
+        softly.assertThat(users)
+                .map(GetUsersResponse::getUsername)
+                .contains(expectedUsername);
+
+        softly.assertAll();
     }
 
     public static Stream<Arguments> userInvalidData() {
@@ -69,7 +80,14 @@ public class SeniorCreateUserTest extends BaseTest {
                 ResponseSpecs.requestReturnsBadRequest(errorKey, errorValue))
                 .post(createUserRequest);
 
+        // Get users' profiles by admin and check that user NOT created
+        List<GetUsersResponse> users = AdminSteps.adminGetUsers();
+        String expectedUsername = createUserRequest.getUsername();
+        softly.assertThat(users)
+                .map(GetUsersResponse::getUsername)
+                .doesNotContain(expectedUsername);
 
+        softly.assertAll();
 
     }
 }

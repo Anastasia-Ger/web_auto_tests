@@ -4,6 +4,8 @@ import io.restassured.response.ValidatableResponse;
 import iteration_1.BaseTest;
 import models.*;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -19,6 +21,21 @@ import specs.ResponseSpecs;
 import java.util.stream.Stream;
 
 public class DepositMoneyTest extends BaseTest {
+
+    private CreateUserRequest createUserRequest;
+    int userId;
+    @BeforeEach
+    void setUp() {
+        // Create user
+        // Get an object that stores CreateUserRequest and userId
+        CreateUserSteps user = CreateUserSteps.createUser();
+        createUserRequest = user.getRequest();
+        userId = (int)user.getUserId();
+    }
+    @AfterEach
+    void deleteUsers() {
+        AdminSteps.deleteUser(userId);
+    }
 
     // Data for parameterized test:
     public static Stream<Arguments> depositValidAmount() {
@@ -39,20 +56,12 @@ public class DepositMoneyTest extends BaseTest {
 @ParameterizedTest
 public void userCanDepositMoneyWithValidAmount(double balance) {
 
-    // Create user
-    // Get an object that stores CreateUserRequest and userId
-    CreateUserSteps user = CreateUserSteps.createUser();
-
-    // Get CreateUserRequest and userId
-    CreateUserRequest userRequest = user.getRequest();
-    int userId = (int)user.getUserId();
-
     // Create an account and get account ID
-    int accountId = AdminSteps.createAccount(userRequest).getId();
+    int accountId = AdminSteps.createAccount(createUserRequest).getId();
 
     // Get balance from account info before deposit
-    double balanceBeforeDeposit = UserSteps.getCustomerAccounts(userRequest.getUsername(),
-            userRequest.getPassword()).get(0).getBalance();
+    double balanceBeforeDeposit = UserSteps.getCustomerAccounts(createUserRequest.getUsername(),
+            createUserRequest.getPassword()).getFirst().getBalance();
 
     // Deposit money
     DepositRequest depositRequest = DepositRequest.builder()
@@ -60,24 +69,19 @@ public void userCanDepositMoneyWithValidAmount(double balance) {
             .balance(balance)
             .build();
 
-    DepositResponse response = new ValidatedCrudRequester<DepositResponse>(RequestSpecs.authAsUser(userRequest.getUsername(),
-            userRequest.getPassword()),
+    DepositResponse response = new ValidatedCrudRequester<DepositResponse>(RequestSpecs.authAsUser(createUserRequest.getUsername(),
+            createUserRequest.getPassword()),
             Endpoint.DEPOSIT, ResponseSpecs.requestReturnedOk())
             .post(depositRequest);
 
     softly.assertThat(depositRequest.getBalance()).isEqualTo(response.getBalance());
 
     // Get balance from account info after deposit
-    double balanceAfterDeposit = UserSteps.getCustomerAccounts(userRequest.getUsername(),
-            userRequest.getPassword()).get(0).getBalance();
+    double balanceAfterDeposit = UserSteps.getCustomerAccounts(createUserRequest.getUsername(),
+            createUserRequest.getPassword()).getFirst().getBalance();
 
     // Check that balance changed by the amount of deposit
     softly.assertThat(balanceAfterDeposit).isEqualTo(balanceBeforeDeposit + depositRequest.getBalance());
-
-    // Delete user
-    ValidatableResponse responseSpecification = new CrudRequester(RequestSpecs.adminSpec(), Endpoint.DELETE, ResponseSpecs.requestReturnedOk())
-            .delete(userId);
-    softly.assertThat(responseSpecification.body(Matchers.equalTo("User with ID " + userId + " deleted successfully.")));
 
     softly.assertAll();
 
@@ -87,17 +91,12 @@ public void userCanDepositMoneyWithValidAmount(double balance) {
     @ParameterizedTest
     public void userCanNotDepositMoneyWithInvalidAmount(double balance, String errorValue) {
 
-        // Create a user
-        CreateUserSteps user = CreateUserSteps.createUser();
-        CreateUserRequest userRequest = user.getRequest();
-        int userId = (int)user.getUserId();
-
         // Create an account
-        int accountId = AdminSteps.createAccount(userRequest).getId();
+        int accountId = AdminSteps.createAccount(createUserRequest).getId();
 
         // Get balance from account info before deposit
-        double balanceBeforeDeposit = UserSteps.getCustomerAccounts(userRequest.getUsername(),
-                userRequest.getPassword()).get(0).getBalance();
+        double balanceBeforeDeposit = UserSteps.getCustomerAccounts(createUserRequest.getUsername(),
+                createUserRequest.getPassword()).getFirst().getBalance();
 
         // Deposit money
         DepositRequest depositRequest = DepositRequest.builder()
@@ -105,29 +104,19 @@ public void userCanDepositMoneyWithValidAmount(double balance) {
                 .balance(balance)
                 .build();
 
-        new CrudRequester(RequestSpecs.authAsUser(userRequest.getUsername(), userRequest.getPassword()),
+        new CrudRequester(RequestSpecs.authAsUser(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 Endpoint.DEPOSIT,
                 ResponseSpecs.requestReturnsBadRequestInvalidAmount(errorValue))
                 .post(depositRequest);
 
 
         // Get balance from account info after deposit
-        double balanceAfterDeposit = UserSteps.getCustomerAccounts(userRequest.getUsername(),
-                userRequest.getPassword()).get(0).getBalance();
+        double balanceAfterDeposit = UserSteps.getCustomerAccounts(createUserRequest.getUsername(),
+                createUserRequest.getPassword()).get(0).getBalance();
 
         // Check that balance have not changed by the amount of deposit
         softly.assertThat(balanceAfterDeposit).isEqualTo(balanceBeforeDeposit);
 
-
-        // Delete user
-        new CrudRequester(RequestSpecs.adminSpec(),
-                Endpoint.DELETE, ResponseSpecs.deleteUserOk(userId))
-                .delete(userId);
-
-
-
-
         softly.assertAll();
-
     }
 }

@@ -14,6 +14,12 @@ public enum Endpoint {
             CreateUserResponse.class,
             null
     ),
+    ADMIN_GET_USERS(
+            "/admin/users",
+            BaseModel.class,
+            GetUsersResponse.class,
+            new TypeRef<java.util.List<GetUsersResponse>>() {}
+    ),
     ACCOUNTS(
             "/accounts",
             BaseModel.class,
