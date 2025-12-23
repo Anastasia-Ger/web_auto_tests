@@ -240,7 +240,7 @@ Content-Type: Application/json
 Authorization: Basic TWF4MjAyNTp3ZW9XRXIyMzQkbGs=
 
 {
- "username":"Max1995"
+ "name":"Max Keller"
 }
 
 ### Check that username was updated successfully

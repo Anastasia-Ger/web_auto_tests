@@ -3,8 +3,8 @@ POST http://localhost:4111/api/v1/auth/login
 Content-Type: Application/json
 
 {
- "username":"nikol25",
- "password":"verysTRongPassword33$"
+ "username":"admin",
+ "password":"admin"
 }
 
 ### Positive test: Create user by admin
