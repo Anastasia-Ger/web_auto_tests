@@ -1,6 +1,6 @@
 package iteration_2_middle;
 
-import iteration_1.BaseTest;
+import iteration_1.api.BaseTest;
 import models.BankingTestData;
 import models.CreateUserRequest;
 import models.DepositRequest;

@@ -1,9 +1,7 @@
 package iteration_2_middle;
 
-import io.restassured.response.ValidatableResponse;
-import iteration_1.BaseTest;
+import iteration_1.api.BaseTest;
 import models.*;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;

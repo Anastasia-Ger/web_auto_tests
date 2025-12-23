@@ -1,12 +1,10 @@
 package iteration_2_middle;
 
 import generators.RandomData;
-import io.restassured.response.ValidatableResponse;
-import iteration_1.BaseTest;
+import iteration_1.api.BaseTest;
 import models.CreateUserRequest;
 import models.UpdateUsernameRequest;
 import models.UpdateUsernameResponse;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import requests.skelethon.Endpoint;
 import requests.skelethon.requesters.CrudRequester;
@@ -18,7 +16,6 @@ import specs.ResponseSpecs;
 public class UpdateUsernameTest extends BaseTest {
     @Test
     public void userCanUpdateUsername() {
-
         // Create a user
         CreateUserSteps user = CreateUserSteps.createUser();
         CreateUserRequest userRequest = user.getRequest();
@@ -29,7 +26,8 @@ public class UpdateUsernameTest extends BaseTest {
                 .username(RandomData.getUsername())
                 .build();
 
-        UpdateUsernameResponse response = new ValidatedCrudRequester<UpdateUsernameResponse>(RequestSpecs.authAsUser(userRequest.getUsername(),
+        UpdateUsernameResponse response = new ValidatedCrudRequester<UpdateUsernameResponse>
+                (RequestSpecs.authAsUser(userRequest.getUsername(),
                 userRequest.getPassword()),
                 Endpoint.UPDATE_CUSTOMER,
                 ResponseSpecs.requestReturnedOk())

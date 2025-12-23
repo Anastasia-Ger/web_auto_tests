@@ -44,6 +44,12 @@ public enum Endpoint {
             UpdateUsernameResponse.class,
             null
     ),
+    UPDATE_CUSTOMER_NAME(
+            "/customer/profile",
+             UpdateNameRequest.class,
+             UpdateNameResponse.class,
+            null
+    ),
     DELETE(
             "/admin/users/",
             BaseModel.class,

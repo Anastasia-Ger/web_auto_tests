@@ -1,9 +1,7 @@
-package iteration_1;
+package iteration_1.api;
 
 import comparison.ModelAssertions;
-import generators.RandomData;
 import generators.RandomModelGenerator;
-import io.restassured.common.mapper.TypeRef;
 import models.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -13,7 +11,6 @@ import requests.skelethon.Endpoint;
 import requests.skelethon.requesters.CrudRequester;
 import requests.skelethon.requesters.ValidatedCrudRequester;
 import requests.steps.AdminSteps;
-import requests.steps.UserSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
