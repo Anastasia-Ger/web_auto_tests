@@ -1,4 +1,4 @@
-package iteration_2_middle;
+package iteration_2_middle.api;
 
 import generators.RandomData;
 import iteration_1.api.BaseTest;
@@ -10,7 +10,7 @@ import requests.steps.CreateUserSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
-public class UpdateCustomerNameTest extends BaseTest {
+public class UpdateNameTest extends BaseTest {
     @Test
     public void CustomerCanUpdateName() {
         // Create a user

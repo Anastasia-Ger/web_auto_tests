@@ -1,4 +1,4 @@
-package iteration_2_middle;
+package iteration_2_middle.api;
 
 import iteration_1.api.BaseTest;
 import models.*;
@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 public class DepositMoneyTest extends BaseTest {
 
     private CreateUserRequest createUserRequest;
-    int userId;
+    private int userId;
     @BeforeEach
     void setUp() {
         // Create user
