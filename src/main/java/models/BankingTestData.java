@@ -7,6 +7,7 @@ public final class BankingTestData {
     public static final int TRANSFER_VALID_LOWER = 9999;
     public static final int TRANSFER_VALID_BOUNDARY = 10000;
     public static final int TRANSFER_INVALID_UPPER = 10001;
+    public static final int TRANSFER_VALID_AMOUNT = 1500;
     public static final int TEST_FUNDS_REQUIRED = 15000;
 
     // Deposit limits
