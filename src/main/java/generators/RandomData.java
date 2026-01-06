@@ -16,4 +16,7 @@ public class RandomData {
         return RandomStringUtils.randomAlphabetic(3, 10) +
                 " " + RandomStringUtils.randomAlphabetic(3, 10);
     }
+    public static String getInvalidName() {
+        return RandomStringUtils.randomAlphabetic(3, 10);
+    }
 }

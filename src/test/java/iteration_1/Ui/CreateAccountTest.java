@@ -48,6 +48,8 @@ public class CreateAccountTest {
                 .extract()
                 .header("Authorization");
 
+        System.out.println("Auth Token: " + userAuthHeader);
+
         Selenide.open("/");
 
         // Put authentication token into Local Storage

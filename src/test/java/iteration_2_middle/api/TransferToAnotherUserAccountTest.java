@@ -1,4 +1,4 @@
-package iteration_2_middle;
+package iteration_2_middle.api;
 
 import iteration_1.api.BaseTest;
 import models.BankingTestData;
@@ -62,7 +62,7 @@ public class TransferToAnotherUserAccountTest extends BaseTest {
         // Sender transfers money to receiver's account: lower boundary value - 9999
         TransferRequest transferRequest1 = TransferRequest.builder()
                 .senderAccountId(senderAccountId)
-                .receiverAccountId(receiverAccountId)
+                .recipientAccountId(receiverAccountId)
                 .amount(BankingTestData.TRANSFER_VALID_LOWER)
                 .build();
 
@@ -82,7 +82,7 @@ public class TransferToAnotherUserAccountTest extends BaseTest {
        // Sender transfers money to receiver's account: valid amount 10000 (max allowed)
         TransferRequest transferRequest2 = TransferRequest.builder()
                 .senderAccountId(senderAccountId)
-                .receiverAccountId(receiverAccountId)
+                .recipientAccountId(receiverAccountId)
                 .amount(BankingTestData.TRANSFER_VALID_BOUNDARY)
                 .build();
 
@@ -102,7 +102,7 @@ public class TransferToAnotherUserAccountTest extends BaseTest {
         // Negative test
         TransferRequest transferRequest3 = TransferRequest.builder()
                 .senderAccountId(senderAccountId)
-                .receiverAccountId(receiverAccountId)
+                .recipientAccountId(receiverAccountId)
                 .amount(BankingTestData.TRANSFER_INVALID_UPPER)
                 .build();
 
