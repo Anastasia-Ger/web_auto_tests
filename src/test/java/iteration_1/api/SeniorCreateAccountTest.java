@@ -1,15 +1,15 @@
 package iteration_1.api;
 
 import io.restassured.common.mapper.TypeRef;
-import models.CreateAccountResponse;
-import models.CreateUserRequest;
-import models.GetAccountResponse;
+import api.models.CreateAccountResponse;
+import api.models.CreateUserRequest;
+import api.models.GetAccountResponse;
 import org.junit.jupiter.api.Test;
-import requests.skelethon.Endpoint;
-import requests.skelethon.requesters.ValidatedCrudRequester;
-import requests.steps.AdminSteps;
-import specs.RequestSpecs;
-import specs.ResponseSpecs;
+import api.requests.skelethon.Endpoint;
+import api.requests.skelethon.requesters.ValidatedCrudRequester;
+import api.requests.steps.AdminSteps;
+import api.specs.RequestSpecs;
+import api.specs.ResponseSpecs;
 
 import java.util.List;
 
