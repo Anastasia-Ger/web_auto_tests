@@ -1,17 +1,17 @@
 package iteration_2_middle.api;
 
-import generators.RandomData;
+import api.generators.RandomData;
 import iteration_1.api.BaseTest;
-import models.CreateUserRequest;
-import models.UpdateUsernameRequest;
-import models.UpdateUsernameResponse;
+import api.models.CreateUserRequest;
+import api.models.UpdateUsernameRequest;
+import api.models.UpdateUsernameResponse;
 import org.junit.jupiter.api.Test;
-import requests.skelethon.Endpoint;
-import requests.skelethon.requesters.CrudRequester;
-import requests.skelethon.requesters.ValidatedCrudRequester;
-import requests.steps.CreateUserSteps;
-import specs.RequestSpecs;
-import specs.ResponseSpecs;
+import api.requests.skelethon.Endpoint;
+import api.requests.skelethon.requesters.CrudRequester;
+import api.requests.skelethon.requesters.ValidatedCrudRequester;
+import api.requests.steps.CreateUserSteps;
+import api.specs.RequestSpecs;
+import api.specs.ResponseSpecs;
 
 public class UpdateUsernameTest extends BaseTest {
     @Test
