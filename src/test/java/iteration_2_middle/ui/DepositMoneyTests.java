@@ -1,46 +1,29 @@
 package iteration_2_middle.ui;
 
-import com.codeborne.selenide.Condition;
-import com.codeborne.selenide.Configuration;
-import com.codeborne.selenide.Selectors;
+import api.models.BankingTestData;
 import api.models.CreateUserRequest;
-import api.models.LoginUserRequest;
+import api.requests.steps.AdminSteps;
+import api.requests.steps.CreateUserSteps;
+import api.requests.steps.UserSteps;
+import com.codeborne.selenide.WebDriverConditions;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.openqa.selenium.Alert;
-import api.requests.skelethon.Endpoint;
-import api.requests.skelethon.requesters.CrudRequester;
-import api.requests.steps.AdminSteps;
-import api.requests.steps.CreateUserSteps;
-import api.requests.steps.UserSteps;
-import api.specs.RequestSpecs;
-import api.specs.ResponseSpecs;
-import java.util.Map;
+import ui.pages.BankAlert;
+import ui.pages.DepositMoney;
 import java.util.stream.Stream;
-import static com.codeborne.selenide.Selenide.*;
+import static com.codeborne.selenide.Selenide.webdriver;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DepositMoneyTests {
+public class DepositMoneyTests extends BaseUiTest {
     private CreateUserRequest createUserRequest;
     private int userId;
-    @BeforeAll
-    public static void setupSelenoid() {
-        Configuration.remote = "http://localhost:4444/wd/hub";
-        Configuration.baseUrl = "http://192.168.8.39:3000";
-        Configuration.browser = "chrome";
-        Configuration.browserSize = "1920x1080";
-        Configuration.browserCapabilities.setCapability("selenoid:options",
-                Map.of("enableVNC", true, "enableLog", true)
-        );
-    }
+
     @BeforeEach
     void setUp() {
         // Create user
-        // Get createUserRequest and userId
         CreateUserSteps user = CreateUserSteps.createUser();
         createUserRequest = user.getRequest();
         userId = (int)user.getUserId();
@@ -54,16 +37,16 @@ public class DepositMoneyTests {
     // Data for parameterized test:
     public static Stream<Arguments> dataForDepositWithValidAmount() {
         return Stream.of(
-                Arguments.of(5000.0),
-                Arguments.of(4999.0),
-                Arguments.of(1.0)
+                Arguments.of(BankingTestData.MAX_DEPOSIT),
+                Arguments.of(BankingTestData.DEPOSIT_VALID_BELOW_MAX),
+                Arguments.of(BankingTestData.DEPOSIT_VALID_MIN)
         );
     }
     public static Stream<Arguments> dataForDepositWithInvalidAmount() {
         return Stream.of(
-                Arguments.of(5001.0, "❌ Please deposit less or equal to 5000$."),
-                Arguments.of(-1.0, "❌ Please enter a valid amount."),
-                Arguments.of(0.0, "❌ Please enter a valid amount.")
+                Arguments.of(BankingTestData.DEPOSIT_INVALID_ABOVE_MAX, BankAlert.PLEASE_ENTER_LESS_OR_EQUAL_TO_5000.getMessage()),
+                Arguments.of(BankingTestData.DEPOSIT_INVALID_NEGATIVE, BankAlert.PLEASE_ENTER_VALID_AMOUNT.getMessage()),
+                Arguments.of(BankingTestData.ZERO_DEPOSIT, BankAlert.PLEASE_ENTER_VALID_AMOUNT.getMessage())
         );
     }
 
@@ -75,45 +58,19 @@ public class DepositMoneyTests {
         // User creates an account
         String accountNumber = AdminSteps.createAccount(createUserRequest).getAccountNumber();
         // User logs in UI
-        String userAuthHeader = new CrudRequester(RequestSpecs.unauthSpec(),
-                Endpoint.LOGIN, ResponseSpecs.requestReturnedOk())
-                .post(LoginUserRequest.builder().username(createUserRequest.getUsername()).password(createUserRequest.getPassword()).build())
-                .extract()
-                .header("Authorization");
-
-        open("/");
-
-        // Put authentication token into Local Storage
-        executeJavaScript("localStorage.setItem('authToken', arguments[0]);", userAuthHeader);
-        open("/dashboard");
+        authAsUser(createUserRequest);
 
     // Steps
-        //Choose an account
-        $(Selectors.byText("\uD83D\uDCB0 Deposit Money")).click();
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector")).selectOptionContainingText(accountNumber);
-
-        // Enter valid amount
-        $(Selectors.byAttribute("placeholder", "Enter amount")).sendKeys("" + amount);
-
-        // Click Deposit
-        $(Selectors.byText("\uD83D\uDCB5 Deposit")).click();
-
-    // Expected result
-    // Check that deposit is successful in UI
-        // Validate and accept alert
-        Alert alert = switchTo().alert();
-        String alertText = alert.getText();
-        assertThat(alertText).contains("✅ Successfully deposited");
-        alert.accept();
+        // Make deposit and check alert message
+        new DepositMoney().open().makeDeposit(accountNumber, amount)
+                .checkAlertMessageAndAccept(BankAlert.SUCCESSFULLY_DEPOSITED.getMessage());
 
         // Check redirect to User Dashboard
-        $(Selectors.byText("User Dashboard")).shouldBe(Condition.visible);
+        webdriver().shouldHave(WebDriverConditions.urlContaining("/dashboard"));
 
         // Check that balance changed in UI
-        $(Selectors.byText("\uD83D\uDCB0 Deposit Money")).click();
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector")).selectOptionContainingText("Balance: $" + amount);
+        double actualBalance = new DepositMoney().open().getBalanceByAccountNumber(accountNumber);
+        assertThat(actualBalance).isEqualTo(amount);
 
     // Check that deposit is successful in API
         // Get balance from account info
@@ -126,44 +83,21 @@ public class DepositMoneyTests {
     public void userCanNotDepositInvalidAmountOfMoneyTest(double amount, String actualAlertText) {
     // Preconditions
         // User creates an account
-        int accountId = AdminSteps.createAccount(createUserRequest).getId();
+        String accountNumber = AdminSteps.createAccount(createUserRequest).getAccountNumber();
         // User logs in UI
-        String userAuthHeader = new CrudRequester(RequestSpecs.unauthSpec(),
-                Endpoint.LOGIN, ResponseSpecs.requestReturnedOk())
-                .post(LoginUserRequest.builder().username(createUserRequest.getUsername()).password(createUserRequest.getPassword()).build())
-                .extract()
-                .header("Authorization");
-
-        open("/");
-
-        // Put authentication token into Local Storage
-        executeJavaScript("localStorage.setItem('authToken', arguments[0]);", userAuthHeader);
-        open("/dashboard");
+        authAsUser(createUserRequest);
 
     // Steps
-        //Choose an account
-        $(Selectors.byText("\uD83D\uDCB0 Deposit Money")).click();
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector")).selectOptionContainingText("" + accountId);
+        // Make deposit and check alert message
+        new DepositMoney().open().makeDeposit(accountNumber, amount)
+                .checkAlertMessageAndAccept(actualAlertText);
 
-        // Enter valid amount
-        $(Selectors.byAttribute("placeholder", "Enter amount")).sendKeys("" + amount);
+        // Check NO redirect to User Dashboard
+        webdriver().shouldHave(WebDriverConditions.urlContaining("/deposit"));
 
-        // Click Deposit
-        $(Selectors.byText("\uD83D\uDCB5 Deposit")).click();
-
-        // Expected result
-        // Check that deposit is not made
-        // Validate and accept alert
-        Alert alert = switchTo().alert();
-        String alertText = alert.getText();
-        assertThat(alertText).contains(actualAlertText);
-        alert.accept();
-
-        // Check that balance does not change in UI
-        $(Selectors.byText("\uD83D\uDCB0 Deposit Money")).click();
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector")).selectOptionContainingText("Balance: $0.00");
+        // Check that balance changed in UI
+        double actualBalance = new DepositMoney().open().getBalanceByAccountNumber(accountNumber);
+        assertThat(actualBalance).isZero();
 
     }
 }

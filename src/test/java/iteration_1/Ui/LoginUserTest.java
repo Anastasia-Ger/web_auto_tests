@@ -20,6 +20,7 @@ public class LoginUserTest extends BaseUiTest {
     public void userCanLoginWithCorrectDataTest() {
         // create user:
         CreateUserRequest user = AdminSteps.createUser();
+
         new LoginPage().open().login(user.getUsername(), user.getPassword())
                 .getPage(UserDashboard.class).getWelcomeText().shouldBe(Condition.visible)
                 .shouldHave(Condition.text("Welcome, noname!"));
