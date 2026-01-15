@@ -1,27 +1,25 @@
 package iteration_2_middle.ui;
 
-import com.codeborne.selenide.Configuration;
-import com.codeborne.selenide.Selectors;
-import com.codeborne.selenide.Selenide;
 import api.generators.RandomData;
 import api.models.*;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.openqa.selenium.Alert;
 import api.requests.skelethon.Endpoint;
 import api.requests.skelethon.requesters.CrudRequester;
 import api.requests.skelethon.requesters.ValidatedCrudRequester;
 import api.requests.steps.AdminSteps;
 import api.requests.steps.CreateUserSteps;
+import api.requests.steps.UserSteps;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
-import java.util.Map;
-import static com.codeborne.selenide.Selenide.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import ui.pages.BankAlert;
+import ui.pages.BasePage;
+import ui.pages.DepositMoney;
+import ui.pages.MakeTransfer;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TransferTests {
+public class TransferTests extends BaseUiTest {
     private CreateUserRequest createSenderRequest;
     private CreateUserRequest createRecipientRequest;
     private int senderId;
@@ -32,16 +30,7 @@ public class TransferTests {
     private String recipientAccountNumber;
     private String recipientName;
     private String invalidRecipientAccountNumber;
-    @BeforeAll
-    public static void setupSelenoid() {
-        Configuration.remote = "http://localhost:4444/wd/hub";
-        Configuration.baseUrl = "http://192.168.8.39:3000";
-        Configuration.browser = "chrome";
-        Configuration.browserSize = "1920x1080";
-        Configuration.browserCapabilities.setCapability("selenoid:options",
-                Map.of("enableVNC", true, "enableLog", true)
-        );
-    }
+
     @BeforeEach
     void setUp() {
     // Preconditions:
@@ -77,7 +66,6 @@ public class TransferTests {
                 .name(RandomData.getName())
                 .build();
 
-
         recipientName = new ValidatedCrudRequester<UpdateNameResponse>
                 (RequestSpecs.authAsUser(createRecipientRequest.getUsername(),
                         createRecipientRequest.getPassword()),
@@ -86,17 +74,7 @@ public class TransferTests {
                 .update(updateNameRequest).getCustomer().getName();
 
         // Sender logs in UI
-        String senderAuthHeader = new CrudRequester(RequestSpecs.unauthSpec(),
-                Endpoint.LOGIN, ResponseSpecs.requestReturnedOk())
-                .post(LoginUserRequest.builder().username(createSenderRequest.getUsername()).password(createSenderRequest.getPassword()).build())
-                .extract()
-                .header("Authorization");
-
-        open("/");
-
-        // Put authentication token into Local Storage
-        executeJavaScript("localStorage.setItem('authToken', arguments[0]);", senderAuthHeader);
-        open("/dashboard");
+        authAsUser(createSenderRequest);
 
     }
     @AfterEach
@@ -109,97 +87,33 @@ public class TransferTests {
     public  void userCanMakeTransferWithValidDataTest() {
     // Steps:
         // Sender makes a transfer
-        $(Selectors.byText("\uD83D\uDD04 Make a Transfer")).click();
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector"))
-                .selectOptionContainingText(senderAccountNumber);
-        $(Selectors.byAttribute("placeholder", "Enter recipient name"))
-                .sendKeys(recipientName);
-        $(Selectors.byAttribute("placeholder", "Enter recipient account number"))
-                .sendKeys(recipientAccountNumber);
-        $(Selectors.byAttribute("placeholder", "Enter amount"))
-                .sendKeys("" + BankingTestData.TRANSFER_VALID_AMOUNT);
-        $(Selectors.byId("confirmCheck")).click();
-        $(Selectors.byText("\uD83D\uDE80 Send Transfer")).click();
+        new MakeTransfer().open().sendTransfer(senderAccountNumber, recipientName,
+                recipientAccountNumber, BankingTestData.TRANSFER_VALID_AMOUNT)
+                .checkAlertMessageAndAccept(BankAlert.SUCCESSFULLY_TRANSFERRED.getMessage());
 
-    // UI checks
-        // Check that alert appears and has correct message
-        Alert alert = switchTo().alert();
-        String alertText = alert.getText();
-        assertThat(alertText).contains("✅ Successfully transferred");
-        alert.accept();
-
-        Selenide.refresh();
-
-        // Check that balance changes in sender account
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector"))
-                .selectOptionContainingText(senderAccountNumber);
-
-        String senderAccountText = $(Selectors.byCssSelector("select.account-selector"))
-                .getSelectedOption()
-                .getText();
-        String senderCurrentBalance = senderAccountText.replaceAll(".*Balance:\\s*\\$\\s*([0-9]+\\.[0-9]{2}).*",
-                "$1");
-        double senderActualBalance = Double.parseDouble(senderCurrentBalance);
+        // Check that balance changes in sender account in UI
+        double senderActualBalance = new DepositMoney().open().getBalanceByAccountNumber(senderAccountNumber);
         assertThat(senderActualBalance).isEqualTo(BankingTestData.MAX_DEPOSIT  - BankingTestData.TRANSFER_VALID_AMOUNT);
+        BasePage.logout();
 
         // Check that balance changes in recipient account
-        $(Selectors.byText("\uD83D\uDEAA Logout")).click();
-
-        // Recipient logs in
-        String recipientAuthHeader = new CrudRequester(RequestSpecs.unauthSpec(),
-                Endpoint.LOGIN, ResponseSpecs.requestReturnedOk())
-                .post(LoginUserRequest.builder().username(createRecipientRequest.getUsername()).password(createRecipientRequest.getPassword()).build())
-                .extract()
-                .header("Authorization");
-
-        open("/");
-
-        // Put authentication token into Local Storage
-        executeJavaScript("localStorage.setItem('authToken', arguments[0]);", recipientAuthHeader);
-        open("/dashboard");
-
-        // Get balance via Deposit Money btn
-        // Choose an account
-        $(Selectors.byText("\uD83D\uDCB0 Deposit Money")).click();
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector")).selectOptionContainingText(recipientAccountNumber);
-
-        // Get recipient balance value
-        String recipientAccountText = $(Selectors.byCssSelector("select.account-selector"))
-                .getSelectedOption()
-                .getText();
-
-        String recipientBalance = recipientAccountText.replaceAll(".*Balance:\\s*\\$\\s*([0-9]+\\.[0-9]{2}).*",
-                "$1");
-        double recipientActualBalance = Double.parseDouble(recipientBalance);
+        // Recipient logs in UI
+        authAsUser(createRecipientRequest);
+        // Get balance via Deposit page and assert
+        double recipientActualBalance = new DepositMoney().open().getBalanceByAccountNumber(recipientAccountNumber);
         assertThat(recipientActualBalance).isEqualTo(BankingTestData.TRANSFER_VALID_AMOUNT);
-
-        $(Selectors.byText("\uD83D\uDEAA Logout")).click();
+        BasePage.logout();
 
     // API checks
         // Check that sender balance changes
-        double actualSenderBalance = AdminSteps.adminGetUsers().stream()
-                .filter(user -> user.getId() == senderId)
-                .flatMap(user -> user.getAccounts().stream())
-                .filter(account -> account.getAccountNumber().equals(senderAccountNumber))
-                .findFirst()
-                .orElseThrow(() ->
-                        new AssertionError("Account not found: " + senderAccountNumber))
-                .getBalance();
+        double actualSenderBalance = new UserSteps(createSenderRequest.getUsername(),
+                createSenderRequest.getPassword()).getBalance(senderAccountNumber);
 
         assertThat(actualSenderBalance).isEqualTo(BankingTestData.MAX_DEPOSIT  - BankingTestData.TRANSFER_VALID_AMOUNT);
 
-        // Check that recipient balance changes
-        double actualRecipientBalance = AdminSteps.adminGetUsers().stream()
-                .filter(user -> user.getId() == recipientId)
-                .flatMap(user -> user.getAccounts().stream())
-                .filter(account -> account.getAccountNumber().equals(recipientAccountNumber))
-                .findFirst()
-                .orElseThrow(() ->
-                        new AssertionError("Account not found: " + recipientAccountNumber))
-                .getBalance();
+        // Check that recipient balance changes on the amount of deposit
+        double actualRecipientBalance = new UserSteps(createRecipientRequest.getUsername(),
+                createRecipientRequest.getPassword()).getBalance(recipientAccountNumber);
 
         assertThat(actualRecipientBalance).isEqualTo(BankingTestData.TRANSFER_VALID_AMOUNT);
 
@@ -209,171 +123,51 @@ public class TransferTests {
         invalidRecipientAccountNumber = "ACC85";
     // Steps:
         // Sender makes a transfer
-        $(Selectors.byText("\uD83D\uDD04 Make a Transfer")).click();
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector"))
-                .selectOptionContainingText(senderAccountNumber);
-        $(Selectors.byAttribute("placeholder", "Enter recipient name"))
-                .sendKeys(recipientName);
-        $(Selectors.byAttribute("placeholder", "Enter recipient account number"))
-                .sendKeys(invalidRecipientAccountNumber);
-        $(Selectors.byAttribute("placeholder", "Enter amount"))
-                .sendKeys("" + BankingTestData.TRANSFER_VALID_AMOUNT);
-        $(Selectors.byId("confirmCheck")).click();
-        $(Selectors.byText("\uD83D\uDE80 Send Transfer")).click();
+        new MakeTransfer().open().sendTransfer(senderAccountNumber, recipientName,
+                        invalidRecipientAccountNumber, BankingTestData.TRANSFER_VALID_AMOUNT)
+                .checkAlertMessageAndAccept(BankAlert.NO_USER_FOUND_WITH_THIS_ACCOUNT_NUMBER.getMessage());
 
-        // UI checks
-        // Check that alert appears and has correct message
-        Alert alert = switchTo().alert();
-        String alertText = alert.getText();
-        assertThat(alertText).isEqualTo("❌ No user found with this account number.");
-        alert.accept();
-
-        Selenide.refresh();
-
-        // Check that balance does not change in sender account
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector"))
-                .selectOptionContainingText(senderAccountNumber);
-
-        String senderAccountText = $(Selectors.byCssSelector("select.account-selector"))
-                .getSelectedOption()
-                .getText();
-        String senderCurrentBalance = senderAccountText.replaceAll(".*Balance:\\s*\\$\\s*([0-9]+\\.[0-9]{2}).*",
-                "$1");
-        double senderActualBalance = Double.parseDouble(senderCurrentBalance);
+        // Check that balance does not change in sender account in UI
+        double senderActualBalance = new DepositMoney().open().getBalanceByAccountNumber(senderAccountNumber);
         assertThat(senderActualBalance).isEqualTo(BankingTestData.MAX_DEPOSIT);
+        BasePage.logout();
 
-        // Check that balance does not change in recipient account
-        $(Selectors.byText("\uD83D\uDEAA Logout")).click();
-
-        // Recipient logs in
-        String recipientAuthHeader = new CrudRequester(RequestSpecs.unauthSpec(),
-                Endpoint.LOGIN, ResponseSpecs.requestReturnedOk())
-                .post(LoginUserRequest.builder().username(createRecipientRequest.getUsername()).password(createRecipientRequest.getPassword()).build())
-                .extract()
-                .header("Authorization");
-
-        open("/");
-
-        // Put authentication token into Local Storage
-        executeJavaScript("localStorage.setItem('authToken', arguments[0]);", recipientAuthHeader);
-        open("/dashboard");
-
-        // Get balance via Deposit Money btn
-        // Choose an account
-        $(Selectors.byText("\uD83D\uDCB0 Deposit Money")).click();
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector")).selectOptionContainingText(recipientAccountNumber);
-
-        // Get recipient balance value
-        String recipientAccountText = $(Selectors.byCssSelector("select.account-selector"))
-                .getSelectedOption()
-                .getText();
-
-        String recipientBalance = recipientAccountText.replaceAll(".*Balance:\\s*\\$\\s*([0-9]+\\.[0-9]{2}).*",
-                "$1");
-        double recipientActualBalance = Double.parseDouble(recipientBalance);
+        // Check that balance does not change in recipient account in UI
+        authAsUser(createRecipientRequest);
+        double recipientActualBalance = new DepositMoney().open().getBalanceByAccountNumber(recipientAccountNumber);
         assertThat(recipientActualBalance).isZero();
-
-        $(Selectors.byText("\uD83D\uDEAA Logout")).click();
+        BasePage.logout();
 
     }
     @Test
     public void userCanNotTransferMoreThanMaximumAllowedAmount() {
     // Steps:
         // Sender makes a transfer
-        $(Selectors.byText("\uD83D\uDD04 Make a Transfer")).click();
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector"))
-                .selectOptionContainingText(senderAccountNumber);
-        $(Selectors.byAttribute("placeholder", "Enter recipient name"))
-                .sendKeys(recipientName);
-        $(Selectors.byAttribute("placeholder", "Enter recipient account number"))
-                .sendKeys(recipientAccountNumber);
-        $(Selectors.byAttribute("placeholder", "Enter amount"))
-                .sendKeys("" + BankingTestData.TRANSFER_INVALID_UPPER);
-        $(Selectors.byId("confirmCheck")).click();
-        $(Selectors.byText("\uD83D\uDE80 Send Transfer")).click();
-
-    // UI checks
-        // Check that alert appears and has correct message
-        Alert alert = switchTo().alert();
-        String alertText = alert.getText();
-        assertThat(alertText).isEqualTo("❌ Error: Transfer amount cannot exceed 10000");
-        alert.accept();
-
-        Selenide.refresh();
+        new MakeTransfer().open().sendTransfer(senderAccountNumber, recipientName,
+                        recipientAccountNumber, BankingTestData.TRANSFER_INVALID_UPPER)
+                .checkAlertMessageAndAccept(BankAlert.TRANSFER_AMOUNT_CANNOT_EXCEED_10000.getMessage());
 
         // Check that balance does not change in sender account
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector"))
-                .selectOptionContainingText(senderAccountNumber);
-
-        String senderAccountText = $(Selectors.byCssSelector("select.account-selector"))
-                .getSelectedOption()
-                .getText();
-        String senderCurrentBalance = senderAccountText.replaceAll(".*Balance:\\s*\\$\\s*([0-9]+\\.[0-9]{2}).*",
-                "$1");
-        double senderActualBalance = Double.parseDouble(senderCurrentBalance);
+        double senderActualBalance = new DepositMoney().open().getBalanceByAccountNumber(senderAccountNumber);
         assertThat(senderActualBalance).isEqualTo(BankingTestData.MAX_DEPOSIT);
+        BasePage.logout();
 
         // Check that balance does not change in recipient account
-        $(Selectors.byText("\uD83D\uDEAA Logout")).click();
-
-        // Recipient logs in
-        String recipientAuthHeader = new CrudRequester(RequestSpecs.unauthSpec(),
-                Endpoint.LOGIN, ResponseSpecs.requestReturnedOk())
-                .post(LoginUserRequest.builder().username(createRecipientRequest.getUsername()).password(createRecipientRequest.getPassword()).build())
-                .extract()
-                .header("Authorization");
-
-        open("/");
-
-        // Put authentication token into Local Storage
-        executeJavaScript("localStorage.setItem('authToken', arguments[0]);", recipientAuthHeader);
-        open("/dashboard");
-
-        // Get balance via Deposit Money btn
-        // Choose an account
-        $(Selectors.byText("\uD83D\uDCB0 Deposit Money")).click();
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector")).selectOptionContainingText(recipientAccountNumber);
-
-        // Get recipient balance value
-        String recipientAccountText = $(Selectors.byCssSelector("select.account-selector"))
-                .getSelectedOption()
-                .getText();
-
-        String recipientBalance = recipientAccountText.replaceAll(".*Balance:\\s*\\$\\s*([0-9]+\\.[0-9]{2}).*",
-                "$1");
-        double recipientActualBalance = Double.parseDouble(recipientBalance);
+        authAsUser(createRecipientRequest);
+        double recipientActualBalance = new DepositMoney().open().getBalanceByAccountNumber(recipientAccountNumber);
         assertThat(recipientActualBalance).isZero();
-
-        $(Selectors.byText("\uD83D\uDEAA Logout")).click();
+        BasePage.logout();
 
     // API checks
         // Check that sender balance does not change
-        double actualSenderBalance = AdminSteps.adminGetUsers().stream()
-                .filter(user -> user.getId() == senderId)
-                .flatMap(user -> user.getAccounts().stream())
-                .filter(account -> account.getAccountNumber().equals(senderAccountNumber))
-                .findFirst()
-                .orElseThrow(() ->
-                        new AssertionError("Account not found: " + senderAccountNumber))
-                .getBalance();
+        double actualSenderBalance = new UserSteps(createSenderRequest.getUsername(),
+                createSenderRequest.getPassword()).getBalance(senderAccountNumber);
 
         assertThat(actualSenderBalance).isEqualTo(BankingTestData.MAX_DEPOSIT);
 
         // Check that recipient balance does not change
-        double actualRecipientBalance = AdminSteps.adminGetUsers().stream()
-                .filter(user -> user.getId() == recipientId)
-                .flatMap(user -> user.getAccounts().stream())
-                .filter(account -> account.getAccountNumber().equals(recipientAccountNumber))
-                .findFirst()
-                .orElseThrow(() ->
-                        new AssertionError("Account not found: " + recipientAccountNumber))
-                .getBalance();
+        double actualRecipientBalance = new UserSteps(createRecipientRequest.getUsername(),
+                createRecipientRequest.getPassword()).getBalance(recipientAccountNumber);
 
         assertThat(actualRecipientBalance).isZero();
     }
@@ -381,72 +175,20 @@ public class TransferTests {
     public void userCanNotTransferWithEmptyRecipientName() {
     // Steps:
         // Sender makes a transfer
-        $(Selectors.byText("\uD83D\uDD04 Make a Transfer")).click();
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector"))
-                .selectOptionContainingText(senderAccountNumber);
-        $(Selectors.byAttribute("placeholder", "Enter recipient account number"))
-                .sendKeys(recipientAccountNumber);
-        $(Selectors.byAttribute("placeholder", "Enter amount"))
-                .sendKeys("" + BankingTestData.TRANSFER_INVALID_UPPER);
-        $(Selectors.byId("confirmCheck")).click();
-        $(Selectors.byText("\uD83D\uDE80 Send Transfer")).click();
-
-        // UI checks
-        // Check that alert appears and has correct message
-        Alert alert = switchTo().alert();
-        String alertText = alert.getText();
-        assertThat(alertText).isEqualTo("❌ The recipient name does not match the registered name.");
-        alert.accept();
-
-        Selenide.refresh();
+        new MakeTransfer().open().sendTransfer(senderAccountNumber, recipientAccountNumber,
+                        BankingTestData.TRANSFER_VALID_AMOUNT)
+                .checkAlertMessageAndAccept(BankAlert.RECIPIENT_NAME_DOES_NOT_MATCH_REGISTERED_NAME.getMessage());
 
         // Check that balance does not change in sender account
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector"))
-                .selectOptionContainingText(senderAccountNumber);
-
-        String senderAccountText = $(Selectors.byCssSelector("select.account-selector"))
-                .getSelectedOption()
-                .getText();
-        String senderCurrentBalance = senderAccountText.replaceAll(".*Balance:\\s*\\$\\s*([0-9]+\\.[0-9]{2}).*",
-                "$1");
-        double senderActualBalance = Double.parseDouble(senderCurrentBalance);
+        double senderActualBalance = new DepositMoney().open().getBalanceByAccountNumber(senderAccountNumber);
         assertThat(senderActualBalance).isEqualTo(BankingTestData.MAX_DEPOSIT);
+        BasePage.logout();
 
         // Check that balance does not change in recipient account
-        $(Selectors.byText("\uD83D\uDEAA Logout")).click();
-
-        // Recipient logs in
-        String recipientAuthHeader = new CrudRequester(RequestSpecs.unauthSpec(),
-                Endpoint.LOGIN, ResponseSpecs.requestReturnedOk())
-                .post(LoginUserRequest.builder().username(createRecipientRequest.getUsername()).password(createRecipientRequest.getPassword()).build())
-                .extract()
-                .header("Authorization");
-
-        open("/");
-
-        // Put authentication token into Local Storage
-        executeJavaScript("localStorage.setItem('authToken', arguments[0]);", recipientAuthHeader);
-        open("/dashboard");
-
-        // Get balance via Deposit Money btn
-        // Choose an account
-        $(Selectors.byText("\uD83D\uDCB0 Deposit Money")).click();
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector")).selectOptionContainingText(recipientAccountNumber);
-
-        // Get recipient balance value
-        String recipientAccountText = $(Selectors.byCssSelector("select.account-selector"))
-                .getSelectedOption()
-                .getText();
-
-        String recipientBalance = recipientAccountText.replaceAll(".*Balance:\\s*\\$\\s*([0-9]+\\.[0-9]{2}).*",
-                "$1");
-        double recipientActualBalance = Double.parseDouble(recipientBalance);
+        authAsUser(createRecipientRequest);
+        double recipientActualBalance = new DepositMoney().open().getBalanceByAccountNumber(recipientAccountNumber);
         assertThat(recipientActualBalance).isZero();
-
-        $(Selectors.byText("\uD83D\uDEAA Logout")).click();
+        BasePage.logout();
 
     }
     @Test
@@ -454,71 +196,20 @@ public class TransferTests {
     // Steps:
         // Sender makes a transfer
         // Amount is missing
-        $(Selectors.byText("\uD83D\uDD04 Make a Transfer")).click();
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector"))
-                .selectOptionContainingText(senderAccountNumber);
-        $(Selectors.byAttribute("placeholder", "Enter recipient name"))
-                .sendKeys(recipientName);
-        $(Selectors.byAttribute("placeholder", "Enter recipient account number"))
-                .sendKeys(recipientAccountNumber);
-        $(Selectors.byId("confirmCheck")).click();
-        $(Selectors.byText("\uD83D\uDE80 Send Transfer")).click();
+        new MakeTransfer().open().sendTransfer(senderAccountNumber, recipientName,
+                        recipientAccountNumber)
+                .checkAlertMessageAndAccept(BankAlert.PLEASE_FILL_ALL_FIELDS_AND_CONFIRM.getMessage());
 
-    // UI checks
-        // Check that alert appears and has correct message
-        Alert alert = switchTo().alert();
-        String alertText = alert.getText();
-        assertThat(alertText).isEqualTo("❌ Please fill all fields and confirm.");
-        alert.accept();
-
-        Selenide.refresh();
-
-        // Check that balance does not change in sender account
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector"))
-                .selectOptionContainingText(senderAccountNumber);
-
-        String senderAccountText = $(Selectors.byCssSelector("select.account-selector"))
-                .getSelectedOption()
-                .getText();
-        String senderCurrentBalance = senderAccountText.replaceAll(".*Balance:\\s*\\$\\s*([0-9]+\\.[0-9]{2}).*",
-                "$1");
-        double senderActualBalance = Double.parseDouble(senderCurrentBalance);
+        // Check that balance does not change in sender account in UI
+        double senderActualBalance = new DepositMoney().open().getBalanceByAccountNumber(senderAccountNumber);
         assertThat(senderActualBalance).isEqualTo(BankingTestData.MAX_DEPOSIT);
+        BasePage.logout();
 
         // Check that balance does not change in recipient account
-        $(Selectors.byText("\uD83D\uDEAA Logout")).click();
-
-        // Recipient logs in
-        String recipientAuthHeader = new CrudRequester(RequestSpecs.unauthSpec(),
-                Endpoint.LOGIN, ResponseSpecs.requestReturnedOk())
-                .post(LoginUserRequest.builder().username(createRecipientRequest.getUsername()).password(createRecipientRequest.getPassword()).build())
-                .extract()
-                .header("Authorization");
-
-        open("/");
-
-        // Put authentication token into Local Storage
-        executeJavaScript("localStorage.setItem('authToken', arguments[0]);", recipientAuthHeader);
-        open("/dashboard");
-
-        // Get balance via Deposit Money btn
-        // Choose an account
-        $(Selectors.byText("\uD83D\uDCB0 Deposit Money")).click();
-        $(Selectors.byClassName("account-selector")).click();
-        $(Selectors.byCssSelector("select.account-selector")).selectOptionContainingText(recipientAccountNumber);
-
-        // Get recipient balance value
-        String recipientAccountText = $(Selectors.byCssSelector("select.account-selector"))
-                .getSelectedOption()
-                .getText();
-
-        String recipientBalance = recipientAccountText.replaceAll(".*Balance:\\s*\\$\\s*([0-9]+\\.[0-9]{2}).*",
-                "$1");
-        double recipientActualBalance = Double.parseDouble(recipientBalance);
+        authAsUser(createRecipientRequest);
+        double recipientActualBalance = new DepositMoney().open().getBalanceByAccountNumber(recipientAccountNumber);
         assertThat(recipientActualBalance).isZero();
+        BasePage.logout();
 
-        $(Selectors.byText("\uD83D\uDEAA Logout")).click();
     }
 }
