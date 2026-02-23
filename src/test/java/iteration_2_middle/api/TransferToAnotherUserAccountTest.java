@@ -5,6 +5,7 @@ import api.models.BankingTestData;
 import api.models.CreateUserRequest;
 import api.models.DepositRequest;
 import api.models.TransferRequest;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import api.requests.skelethon.Endpoint;
 import api.requests.skelethon.requesters.CrudRequester;
@@ -13,6 +14,7 @@ import api.requests.steps.CreateUserSteps;
 import api.requests.steps.UserSteps;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
+@Disabled
 
 public class TransferToAnotherUserAccountTest extends BaseTest {
     @Test

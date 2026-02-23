@@ -6,8 +6,11 @@ import api.requests.steps.AdminSteps;
 import api.requests.steps.CreateUserSteps;
 import api.requests.steps.UserSteps;
 import com.codeborne.selenide.WebDriverConditions;
+import common.annotations.UserSession;
+import common.storage.SessionStorage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -17,21 +20,14 @@ import java.util.stream.Stream;
 import static com.codeborne.selenide.Selenide.webdriver;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DepositMoneyTests extends BaseUiTest {
-    private CreateUserRequest createUserRequest;
-    private int userId;
 
-    @BeforeEach
-    void setUp() {
-        // Create user
-        CreateUserSteps user = CreateUserSteps.createUser();
-        createUserRequest = user.getRequest();
-        userId = (int)user.getUserId();
-    }
+
+public class DepositMoneyTests extends BaseUiTest {
     @AfterEach
+
     // Clean up test data
     void deleteUsers() {
-        AdminSteps.deleteUser(userId);
+        SessionStorage.clear();
     }
 
     // Data for parameterized test:
@@ -52,13 +48,12 @@ public class DepositMoneyTests extends BaseUiTest {
 
     @MethodSource("dataForDepositWithValidAmount")
     @ParameterizedTest
+    @UserSession()
     public void userCanDepositValidAmountOfMoneyTest(double amount) {
 
     // Preconditions
         // User creates an account
-        String accountNumber = AdminSteps.createAccount(createUserRequest).getAccountNumber();
-        // User logs in UI
-        authAsUser(createUserRequest);
+        String accountNumber = AdminSteps.createAccount(SessionStorage.getUser()).getAccountNumber();
 
     // Steps
         // Make deposit and check alert message
@@ -74,18 +69,19 @@ public class DepositMoneyTests extends BaseUiTest {
 
     // Check that deposit is successful in API
         // Get balance from account info
-        double balanceAfterDeposit = UserSteps.getCustomerAccounts(createUserRequest.getUsername(),
-                createUserRequest.getPassword()).getFirst().getBalance();
+        double balanceAfterDeposit = UserSteps.getCustomerAccounts(SessionStorage.getUser().getUsername(),
+                SessionStorage.getUser().getPassword()).getFirst().getBalance();
+       // double balanceAfterDeposit = UserSteps.getCustomerAccounts(createUserRequest.getUsername(),
+        //        createUserRequest.getPassword()).getFirst().getBalance();
         assertThat(balanceAfterDeposit).isEqualTo(amount);
     }
     @MethodSource("dataForDepositWithInvalidAmount")
     @ParameterizedTest
+    @UserSession
     public void userCanNotDepositInvalidAmountOfMoneyTest(double amount, String actualAlertText) {
     // Preconditions
         // User creates an account
-        String accountNumber = AdminSteps.createAccount(createUserRequest).getAccountNumber();
-        // User logs in UI
-        authAsUser(createUserRequest);
+        String accountNumber = AdminSteps.createAccount(SessionStorage.getUser()).getAccountNumber();
 
     // Steps
         // Make deposit and check alert message

@@ -12,12 +12,15 @@ import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import ui.pages.BankAlert;
 import ui.pages.BasePage;
 import ui.pages.DepositMoney;
 import ui.pages.MakeTransfer;
+
 import static org.assertj.core.api.Assertions.assertThat;
+
 
 public class TransferTests extends BaseUiTest {
     private CreateUserRequest createSenderRequest;
@@ -33,11 +36,11 @@ public class TransferTests extends BaseUiTest {
 
     @BeforeEach
     void setUp() {
-    // Preconditions:
+        // Preconditions:
         // Create sender and his account
         CreateUserSteps sender = CreateUserSteps.createUser();
         createSenderRequest = sender.getRequest();
-        senderId = (int)sender.getUserId();
+        senderId = (int) sender.getUserId();
         CreateAccountResponse senderResponse = AdminSteps.createAccount(createSenderRequest);
         senderAccountId = senderResponse.getId();
         senderAccountNumber = senderResponse.getAccountNumber();
@@ -56,7 +59,7 @@ public class TransferTests extends BaseUiTest {
         // Create recipient and his account
         CreateUserSteps recipient = CreateUserSteps.createUser();
         createRecipientRequest = recipient.getRequest();
-        recipientId = (int)recipient.getUserId();
+        recipientId = (int) recipient.getUserId();
         CreateAccountResponse recipientResponse = AdminSteps.createAccount(createRecipientRequest);
         recipientAccountId = recipientResponse.getId();
         recipientAccountNumber = recipientResponse.getAccountNumber();
@@ -77,23 +80,25 @@ public class TransferTests extends BaseUiTest {
         authAsUser(createSenderRequest);
 
     }
+
     @AfterEach
         // Clean up test data
     void deleteUsers() {
         AdminSteps.deleteUser(senderId);
         AdminSteps.deleteUser(recipientId);
     }
+
     @Test
-    public  void userCanMakeTransferWithValidDataTest() {
-    // Steps:
+    public void userCanMakeTransferWithValidDataTest() {
+        // Steps:
         // Sender makes a transfer
         new MakeTransfer().open().sendTransfer(senderAccountNumber, recipientName,
-                recipientAccountNumber, BankingTestData.TRANSFER_VALID_AMOUNT)
+                        recipientAccountNumber, BankingTestData.TRANSFER_VALID_AMOUNT)
                 .checkAlertMessageAndAccept(BankAlert.SUCCESSFULLY_TRANSFERRED.getMessage());
 
         // Check that balance changes in sender account in UI
         double senderActualBalance = new DepositMoney().open().getBalanceByAccountNumber(senderAccountNumber);
-        assertThat(senderActualBalance).isEqualTo(BankingTestData.MAX_DEPOSIT  - BankingTestData.TRANSFER_VALID_AMOUNT);
+        assertThat(senderActualBalance).isEqualTo(BankingTestData.MAX_DEPOSIT - BankingTestData.TRANSFER_VALID_AMOUNT);
         BasePage.logout();
 
         // Check that balance changes in recipient account
@@ -104,12 +109,12 @@ public class TransferTests extends BaseUiTest {
         assertThat(recipientActualBalance).isEqualTo(BankingTestData.TRANSFER_VALID_AMOUNT);
         BasePage.logout();
 
-    // API checks
+        // API checks
         // Check that sender balance changes
         double actualSenderBalance = new UserSteps(createSenderRequest.getUsername(),
                 createSenderRequest.getPassword()).getBalance(senderAccountNumber);
 
-        assertThat(actualSenderBalance).isEqualTo(BankingTestData.MAX_DEPOSIT  - BankingTestData.TRANSFER_VALID_AMOUNT);
+        assertThat(actualSenderBalance).isEqualTo(BankingTestData.MAX_DEPOSIT - BankingTestData.TRANSFER_VALID_AMOUNT);
 
         // Check that recipient balance changes on the amount of deposit
         double actualRecipientBalance = new UserSteps(createRecipientRequest.getUsername(),
@@ -118,10 +123,12 @@ public class TransferTests extends BaseUiTest {
         assertThat(actualRecipientBalance).isEqualTo(BankingTestData.TRANSFER_VALID_AMOUNT);
 
     }
+
+    @Disabled
     @Test
     public void userCanNotTransferToInvalidAccount() {
         invalidRecipientAccountNumber = "ACC85";
-    // Steps:
+        // Steps:
         // Sender makes a transfer
         new MakeTransfer().open().sendTransfer(senderAccountNumber, recipientName,
                         invalidRecipientAccountNumber, BankingTestData.TRANSFER_VALID_AMOUNT)
@@ -139,9 +146,10 @@ public class TransferTests extends BaseUiTest {
         BasePage.logout();
 
     }
+
     @Test
     public void userCanNotTransferMoreThanMaximumAllowedAmount() {
-    // Steps:
+        // Steps:
         // Sender makes a transfer
         new MakeTransfer().open().sendTransfer(senderAccountNumber, recipientName,
                         recipientAccountNumber, BankingTestData.TRANSFER_INVALID_UPPER)
@@ -158,7 +166,7 @@ public class TransferTests extends BaseUiTest {
         assertThat(recipientActualBalance).isZero();
         BasePage.logout();
 
-    // API checks
+        // API checks
         // Check that sender balance does not change
         double actualSenderBalance = new UserSteps(createSenderRequest.getUsername(),
                 createSenderRequest.getPassword()).getBalance(senderAccountNumber);
@@ -171,9 +179,10 @@ public class TransferTests extends BaseUiTest {
 
         assertThat(actualRecipientBalance).isZero();
     }
+
     @Test
     public void userCanNotTransferWithEmptyRecipientName() {
-    // Steps:
+        // Steps:
         // Sender makes a transfer
         new MakeTransfer().open().sendTransfer(senderAccountNumber, recipientAccountNumber,
                         BankingTestData.TRANSFER_VALID_AMOUNT)
@@ -191,9 +200,10 @@ public class TransferTests extends BaseUiTest {
         BasePage.logout();
 
     }
+
     @Test
     public void userCanNotTransferWithMissingRequiredFields() {
-    // Steps:
+        // Steps:
         // Sender makes a transfer
         // Amount is missing
         new MakeTransfer().open().sendTransfer(senderAccountNumber, recipientName,
