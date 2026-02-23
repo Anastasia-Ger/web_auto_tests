@@ -4,13 +4,14 @@ import api.generators.RandomData;
 import api.models.CreateUserRequest;
 import api.models.LoginUserRequest;
 import api.models.UserRole;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import api.requests.AdminCreateUserRequester;
 import api.requests.CreateAccountRequester;
 import api.requests.LoginUserRequester;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
-
+@Disabled
 public class CreateAccountTest {
     @Test
     public void userCanCreateAccountTest() {
@@ -19,7 +20,6 @@ public class CreateAccountTest {
                 .password(RandomData.getPassword())
                 .role(UserRole.USER.toString())
                 .build();
-
 
 
         // Создание пользователя

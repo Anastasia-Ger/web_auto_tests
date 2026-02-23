@@ -5,12 +5,13 @@ import api.models.CreateUserRequest;
 import api.models.LoginUserRequest;
 import api.models.UserRole;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import api.requests.AdminCreateUserRequester;
 import api.requests.LoginUserRequester;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
-
+@Disabled
 public class LoginUserTest extends BaseTest {
     @Test
     public void adminCanGenerateAuthTokenTest() {

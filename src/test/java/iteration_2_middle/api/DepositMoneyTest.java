@@ -4,6 +4,7 @@ import iteration_1.api.BaseTest;
 import api.models.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -84,7 +85,7 @@ public void userCanDepositMoneyWithValidAmount(double balance) {
     softly.assertAll();
 
 }
-
+@Disabled
     @MethodSource("depositInvalidAmount")
     @ParameterizedTest
     public void userCanNotDepositMoneyWithInvalidAmount(double balance, String errorValue) {

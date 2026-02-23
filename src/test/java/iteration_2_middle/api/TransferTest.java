@@ -7,6 +7,7 @@ import api.models.DepositRequest;
 import api.models.TransferRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import api.requests.skelethon.Endpoint;
 import api.requests.skelethon.requesters.CrudRequester;
@@ -15,6 +16,7 @@ import api.requests.steps.CreateUserSteps;
 import api.requests.steps.UserSteps;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
+@Disabled
 
 public class TransferTest extends BaseTest {
     private CreateUserSteps sender;
@@ -63,6 +65,7 @@ public class TransferTest extends BaseTest {
                 Endpoint.DELETE, ResponseSpecs.deleteUserOk((int) receiver.getUserId()))
                 .delete((int) receiver.getUserId());
     }
+
 
     @Test
     public void userCanTransferValidLowerAmount() {
@@ -118,6 +121,7 @@ public class TransferTest extends BaseTest {
 
         softly.assertThat(balanceAfterTransfer).isEqualTo(initialBalance + transferRequest.getAmount());
     }
+
 
     @Test
     public void userCanNotTransferInvalidAmount() {

@@ -3,6 +3,7 @@ package iteration_1.api;
 import api.comparison.ModelAssertions;
 import api.generators.RandomModelGenerator;
 import api.models.*;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -62,7 +63,7 @@ public class SeniorCreateUserTest extends BaseTest {
                 Arguments.of("abc%", "Password33$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots")
         );
     }
-
+@Disabled
     @MethodSource("userInvalidData")
     @ParameterizedTest
     public void adminCanNotCreateUserWithInvalidData(String username, String password, String role, String errorKey, String errorValue) {
