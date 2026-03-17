@@ -1,9 +1,6 @@
-package iteration_1.Ui;
+package iteration_1.ui;
 
 import api.models.CreateAccountResponse;
-import api.models.CreateUserRequest;
-import api.requests.steps.AdminSteps;
-import api.requests.steps.UserSteps;
 import common.annotations.UserSession;
 import common.storage.SessionStorage;
 import iteration_2_middle.ui.BaseUiTest;

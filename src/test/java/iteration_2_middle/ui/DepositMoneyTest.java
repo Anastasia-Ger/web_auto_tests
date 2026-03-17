@@ -1,16 +1,12 @@
 package iteration_2_middle.ui;
 
 import api.models.BankingTestData;
-import api.models.CreateUserRequest;
 import api.requests.steps.AdminSteps;
-import api.requests.steps.CreateUserSteps;
 import api.requests.steps.UserSteps;
 import com.codeborne.selenide.WebDriverConditions;
 import common.annotations.UserSession;
 import common.storage.SessionStorage;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -22,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 
 
-public class DepositMoneyTests extends BaseUiTest {
+public class DepositMoneyTest extends BaseUiTest {
     @AfterEach
 
     // Clean up test data

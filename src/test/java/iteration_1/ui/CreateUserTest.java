@@ -1,11 +1,10 @@
-package iteration_1.Ui;
+package iteration_1.ui;
 
 import api.comparison.ModelAssertions;
 import api.generators.RandomModelGenerator;
 import api.models.CreateUserRequest;
 import api.models.CreateUserResponse;
 import api.requests.steps.AdminSteps;
-import com.codeborne.selenide.Condition;
 import common.annotations.AdminSession;
 import common.extensions.AdminSessionExtension;
 import iteration_2_middle.ui.BaseUiTest;

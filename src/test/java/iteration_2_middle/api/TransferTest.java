@@ -16,8 +16,8 @@ import api.requests.steps.CreateUserSteps;
 import api.requests.steps.UserSteps;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
-@Disabled
 
+@Disabled
 public class TransferTest extends BaseTest {
     private CreateUserSteps sender;
     private CreateUserSteps receiver;

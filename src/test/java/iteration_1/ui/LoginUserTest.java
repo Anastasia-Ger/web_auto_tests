@@ -1,4 +1,4 @@
-package iteration_1.Ui;
+package iteration_1.ui;
 
 import api.models.CreateUserRequest;
 import api.requests.steps.AdminSteps;
