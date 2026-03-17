@@ -14,8 +14,8 @@ import api.requests.steps.CreateUserSteps;
 import api.requests.steps.UserSteps;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
-@Disabled
 
+@Disabled
 public class TransferToAnotherUserAccountTest extends BaseTest {
     @Test
     public void userCanTransferToAnotherAccount() {

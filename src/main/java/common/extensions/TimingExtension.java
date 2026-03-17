@@ -25,7 +25,7 @@ public class TimingExtension implements BeforeTestExecutionCallback, AfterTestEx
         startTimes.put(testName, System.currentTimeMillis());
         System.out.println("Thread " + Thread.currentThread().getName()
                 +  "Test started: " + testName);
-        System.out.println("Start time: " + formatter.format(Instant.ofEpochMilli(System.currentTimeMillis())));
+    //    System.out.println("Start time: " + formatter.format(Instant.ofEpochMilli(System.currentTimeMillis())));
     }
 
     @Override

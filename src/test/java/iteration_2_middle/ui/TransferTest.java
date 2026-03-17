@@ -22,7 +22,7 @@ import ui.pages.MakeTransfer;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-public class TransferTests extends BaseUiTest {
+public class TransferTest extends BaseUiTest {
     private CreateUserRequest createSenderRequest;
     private CreateUserRequest createRecipientRequest;
     private int senderId;
