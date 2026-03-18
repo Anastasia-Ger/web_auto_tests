@@ -22,6 +22,6 @@ docker run --name nbank-container `
     -v "${CURRENT_DIR}/results:/app/target/surefire-reports" `
     -v "${CURRENT_DIR}/report:/app/target/site" `
     -e TEST_PROFILE=$TEST_PROFILE `
-    -e APIBASEURL=http://192.168.8.52:4111 `
-    -e UIBASEURL=http://192.168.8.52:4111 `
+    -e APIBASEURL=http://192.168.20.127:4111 `
+    -e UIBASEURL=http://192.168.20.127:4111 `
     $IMAGE_NAME
