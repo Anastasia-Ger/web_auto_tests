@@ -23,7 +23,7 @@ jobs:
               ${{ runner.os }}-maven-
             
       - name: Set up services
-        run: pwd && bash restart_docker.sh
+        run: pwd && cd infra/docker_compose && bash restart_docker.ps1 && cd ../..
 
       - name: Run tests
         run: ./mvnw clean test -q
