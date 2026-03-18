@@ -28,7 +28,7 @@ foreach ($image in $images) {
 }
 
 Write-Host ">>> Start Docker Compose"
-docker compose up
+docker compose up -d
 
 
 
