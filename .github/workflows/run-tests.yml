@@ -23,7 +23,9 @@ jobs:
               ${{ runner.os }}-maven-
             
       - name: Set up services
-        run: pwd && cd infra/docker_compose && bash restart_docker.ps1 && cd ../..
+        run: Get-Location; Set-Location infra/docker_compose; .\restart_docker.ps1; Set-Location ../..
+        shell: pwsh
+
 
       - name: Run tests
         run: ./mvnw clean test -q
