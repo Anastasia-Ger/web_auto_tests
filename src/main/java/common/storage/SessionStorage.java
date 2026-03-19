@@ -9,7 +9,6 @@ import java.util.List;
 
 public class SessionStorage {
     // единственный объект класса БЕЗ многопоточности
-
     //private static final SessionStorage INSTANCE = new SessionStorage();
 
     // ниже объект класса с учетом многопоточности (добавили ThreadLocal)

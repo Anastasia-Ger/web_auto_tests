@@ -5,8 +5,10 @@ import api.models.CreateUserRequest;
 import api.specs.RequestSpecs;
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.Selenide;
+import com.codeborne.selenide.logevents.SelenideLogger;
 import common.extensions.BrowserMatchExtension;
 import common.extensions.UserSessionExtension;
+import io.qameta.allure.selenide.AllureSelenide;
 import iteration_1.api.BaseTest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +25,7 @@ public class BaseUiTest extends BaseTest {
         Configuration.baseUrl = Config.getProperty("uiBaseUrl");
         Configuration.browser = Config.getProperty("browser");
         Configuration.browserSize = Config.getProperty("browserSize");
+        SelenideLogger.addListener("AllureSelenide", new AllureSelenide());
         Configuration.headless = false;
         Configuration.browserCapabilities.setCapability("selenoid:options",
                 Map.of("enableVNC", true, "enableLog", true)

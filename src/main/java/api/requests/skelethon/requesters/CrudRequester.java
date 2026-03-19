@@ -3,6 +3,8 @@ package api.requests.skelethon.requesters;
 import api.models.CreateUserResponse;
 import api.requests.skelethon.interfaces.GetAllEndpointInterface;
 import api.specs.RequestSpecs;
+import common.helpers.StepLogger;
+import io.qameta.allure.Step;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
@@ -20,7 +22,9 @@ public class CrudRequester extends HttpRequest implements CrudEndpointInterface,
     }
 
     @Override
+    @Step("Post запрос на {endpoint} с телом {model}")
     public ValidatableResponse post(BaseModel model) {
+        return StepLogger.log("Post request to " + endpoint.getUrl(), () -> {
         var body = model == null ? "" : model;
         return
                 given()
@@ -30,9 +34,11 @@ public class CrudRequester extends HttpRequest implements CrudEndpointInterface,
                         .then()
                         .assertThat()
                         .spec(responseSpecification);
+        });
     }
 
     @Override
+    @Step("GET запрос на {endpoint}")
     public ValidatableResponse get() {
         return
                 given()
@@ -44,6 +50,7 @@ public class CrudRequester extends HttpRequest implements CrudEndpointInterface,
     }
 
     @Override
+    @Step("GET запрос на {endpoint} с id {id}")
     public ValidatableResponse get(int id) {
         return
                 given()
@@ -55,6 +62,7 @@ public class CrudRequester extends HttpRequest implements CrudEndpointInterface,
     }
 
     @Override
+    @Step("PUT запрос на {endpoint} с телом {model}")
     public ValidatableResponse update(BaseModel model) {
         return
                 given()
@@ -68,6 +76,7 @@ public class CrudRequester extends HttpRequest implements CrudEndpointInterface,
     }
 
     @Override
+    @Step("DELETE запрос на {endpoint} с id {id}")
     public ValidatableResponse delete(int id) {
 
         return
@@ -79,6 +88,7 @@ public class CrudRequester extends HttpRequest implements CrudEndpointInterface,
                         .spec(responseSpecification);
     }
     @Override
+    @Step("GET запрос на {endpoint}")
     public ValidatableResponse getAll(Class<?> clazz) {
         return given()
                 .spec(requestSpecification)
