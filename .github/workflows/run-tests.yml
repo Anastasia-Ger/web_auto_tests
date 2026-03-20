@@ -59,5 +59,7 @@ jobs:
       - name: Clean up services
         if: always()
         run: Get-Location; Set-Location infra/docker_compose; docker compose down
+        shell: pwsh
+
 
 
