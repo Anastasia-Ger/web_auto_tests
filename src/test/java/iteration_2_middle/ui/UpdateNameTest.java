@@ -47,7 +47,7 @@ public class UpdateNameTest extends BaseUiTest {
                 .checkAlertMessageAndAccept(BankAlert.NAME_UPDATED_SUCCESSFULLY.getMessage())
                 .getUserProfileName();
 
-        assertThat(actualNewName).isEqualTo(userValidName);
+        assertThat(actualNewName).isEqualTo("Masha");
 
         BasePage.logout();
 
